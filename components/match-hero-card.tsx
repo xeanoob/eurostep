@@ -36,35 +36,31 @@ function ScoreStepper({
   onChange: (v: number) => void
 }) {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <output className="font-display text-[64px] font-black tabular-nums leading-none tracking-tighter text-white drop-shadow-lg">
+    <div className="flex flex-col items-center gap-2">
+      <output className="font-display text-4xl font-bold tabular-nums leading-none tracking-tight text-zinc-400">
         {value}
       </output>
-      <div className="flex items-center gap-1 bg-[#0B0E14] p-1.5 rounded-full border border-white/5 shadow-inner">
+      <div className="flex items-center gap-1 bg-[#0B0E14] p-1.5 rounded-full border border-white/5 shadow-inner mt-1">
         <button
           type="button"
           onClick={() => {
-            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10)
-            playTick()
             onChange(Math.max(0, value - 1))
           }}
-          className="flex size-11 items-center justify-center rounded-full bg-white/5 text-white transition-colors hover:bg-white/10 active:scale-90 active:bg-orange-500/50"
+          className="flex size-9 items-center justify-center rounded-full bg-white/5 text-zinc-400 transition-colors hover:bg-white/10 active:scale-90 active:bg-orange-500/20 active:text-white"
           aria-label="Diminuer"
         >
-          <Minus className="size-5" strokeWidth={2.5} />
+          <Minus className="size-4" strokeWidth={2.5} />
         </button>
-        <div className="w-2" />
+        <div className="w-1" />
         <button
           type="button"
           onClick={() => {
-            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(10)
-            playTick()
             onChange(value + 1)
           }}
-          className="flex size-11 items-center justify-center rounded-full bg-white/5 text-white transition-colors hover:bg-white/10 active:scale-90 active:bg-orange-500/50"
+          className="flex size-9 items-center justify-center rounded-full bg-white/5 text-zinc-400 transition-colors hover:bg-white/10 active:scale-90 active:bg-orange-500/20 active:text-white"
           aria-label="Augmenter"
         >
-          <Plus className="size-5" strokeWidth={2.5} />
+          <Plus className="size-4" strokeWidth={2.5} />
         </button>
       </div>
     </div>
@@ -117,8 +113,7 @@ export function MatchHeroCard({
 
   function handleSubmit() {
     if (onSubmit) {
-      if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([20, 50, 20])
-      playSuccess()
+
       onSubmit(matchId, homeScore, awayScore, isBoosted)
       setSubmitted(true)
       setShowConfetti(true)

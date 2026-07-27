@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'dark',
-  themeColor: '#0a0a0c',
+  themeColor: '#0B0E14',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className={`dark bg-[#0a0a0c] text-[#f2f2f7] antialiased ${anton.variable} ${barlow.variable}`}>
+    <html lang="fr" className={`dark bg-[#0B0E14] text-[#f2f2f7] antialiased ${anton.variable} ${barlow.variable}`}>
       <body className="font-sans font-medium selection:bg-white/20">
         <UserProvider>
           {children}

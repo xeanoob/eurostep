@@ -14,7 +14,7 @@ export default function SignupPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (loading) return // Prevent double submit
+    if (loading) return
     setError('')
     setLoading(true)
 
@@ -27,7 +27,6 @@ export default function SignupPage() {
     const { data, error } = await signUp(email, password, username.trim())
 
     if (error) {
-      // Handle rate limiting
       if (error.message?.includes('rate') || error.status === 429) {
         setError('Trop de tentatives. Réessaie dans quelques minutes.')
       } else if (error.message?.includes('already registered')) {
@@ -39,71 +38,68 @@ export default function SignupPage() {
       return
     }
 
-    // If we got a session, redirect immediately
     if (data?.session) {
       window.location.href = '/'
       return
     }
 
-    // If no session, email confirmation is required
     setNeedsConfirmation(true)
     setLoading(false)
   }
 
   if (needsConfirmation) {
     return (
-      <div className="relative mx-auto flex min-h-svh max-w-md flex-col items-center justify-center overflow-hidden bg-background px-6">
-        <div
-          className="pointer-events-none absolute -top-40 left-1/2 size-[500px] -translate-x-1/2 rounded-full opacity-[0.07] blur-[100px]"
-          style={{ background: 'oklch(0.72 0.19 55)' }}
-          aria-hidden="true"
-        />
-        <div className="relative flex flex-col items-center text-center">
-          <div className="mb-6 flex size-16 items-center justify-center rounded-2xl bg-emerald-500/20">
-            <span className="text-3xl">✉️</span>
-          </div>
-          <h1 className="font-display text-2xl uppercase tracking-tight">Check tes emails</h1>
-          <p className="mt-3 max-w-xs text-sm text-muted-foreground">
-            Un lien de confirmation a été envoyé à <strong className="text-foreground">{email}</strong>. Clique dessus pour activer ton compte.
-          </p>
-          <Link
-            href="/login"
-            className="mt-8 text-sm font-semibold text-primary"
-          >
-            Retour à la connexion
-          </Link>
+      <div className="relative mx-auto flex min-h-svh max-w-md flex-col items-center justify-center bg-[#0B0E14] px-6 text-center text-zinc-100 font-sans">
+        <div className="mb-6 flex size-14 items-center justify-center rounded-sm bg-orange-500/10 border border-orange-500/20">
+          <span className="text-2xl">✉️</span>
         </div>
+        <h1 className="font-display text-3xl font-black italic tracking-tighter uppercase text-white">Vérifie tes emails</h1>
+        <p className="mt-3 max-w-xs text-xs font-bold uppercase tracking-widest text-zinc-500 leading-relaxed">
+          Lien envoyé à <span className="text-orange-500">{email}</span>
+        </p>
+        <Link
+          href="/login"
+          className="mt-10 rounded-sm bg-orange-600 px-8 py-4 font-display text-base font-black italic uppercase tracking-widest text-white transition-all hover:bg-orange-500"
+        >
+          Se Connecter
+        </Link>
       </div>
     )
   }
 
   return (
-    <div className="relative mx-auto flex min-h-svh max-w-md flex-col justify-between overflow-hidden bg-background">
-      {/* Background glow */}
-      <div
-        className="pointer-events-none absolute -top-40 left-1/2 size-[500px] -translate-x-1/2 rounded-full opacity-[0.07] blur-[100px]"
-        style={{ background: 'oklch(0.72 0.19 55)' }}
-        aria-hidden="true"
-      />
+    <div className="relative mx-auto flex min-h-svh max-w-md flex-col justify-between bg-[#0B0E14] text-zinc-100 overflow-hidden font-sans">
+      {/* ─── IMMERSIVE FULL-SCREEN BACKGROUND IMAGE + TEXTURED OVERLAY ─── */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/hero-basketball.png"
+          alt="Basketball Background"
+          className="h-full w-full object-cover object-center opacity-30 mix-blend-luminosity"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0E14]/10 via-[#0B0E14]/80 to-[#0B0E14]" />
+      </div>
 
-      {/* Top: Branding */}
-      <header className="relative flex flex-col items-center px-6 pt-20">
-        <div className="mb-6 flex size-16 items-center justify-center rounded-2xl bg-primary">
-          <span className="font-display text-2xl text-primary-foreground">E</span>
-        </div>
-
-        <h1 className="font-display text-[2.75rem] uppercase leading-[0.85] tracking-tight text-center">
-          Euro<span className="text-primary">Step</span>
+      {/* ─── HEADER & BRANDING ─── */}
+      <header className="relative z-10 flex flex-col items-center px-6 pt-16 text-center">
+        <h1 className="font-display text-4xl font-black italic tracking-tighter text-white">
+          Rejoins la <span className="text-orange-500">Ligue</span>
         </h1>
-        <p className="mt-3 text-[13px] text-muted-foreground">
-          Crée ton compte et rejoins une ligue
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+          EuroStep · Création de compte
         </p>
       </header>
 
-      {/* Middle: Form */}
-      <div className="relative flex-1 px-6 pt-10">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="relative">
+      {/* ─── BRUTALIST FORM NO BOXES ─── */}
+      <div className="relative z-10 flex flex-1 flex-col justify-center px-8 py-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {/* Username input */}
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="username"
+              className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500"
+            >
+              Prénom / Pseudo
+            </label>
             <input
               id="username"
               type="text"
@@ -111,18 +107,19 @@ export default function SignupPage() {
               onChange={(e) => setUsername(e.target.value)}
               required
               autoComplete="given-name"
-              placeholder=" "
-              className="peer w-full rounded-lg border border-border bg-card px-4 pt-5 pb-2 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
+              placeholder="Ex: Jordan"
+              className="w-full rounded-none border-2 border-zinc-800 bg-zinc-950/50 px-4 py-4 text-sm text-white placeholder-zinc-600 transition-all focus:border-orange-500 focus:bg-zinc-950 focus:outline-none"
             />
-            <label
-              htmlFor="username"
-              className="pointer-events-none absolute left-4 top-2 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:uppercase peer-placeholder-shown:tracking-[0.08em] peer-focus:top-2 peer-focus:text-[10px] peer-focus:tracking-[0.12em] peer-focus:text-primary"
-            >
-              Prénom
-            </label>
           </div>
 
-          <div className="relative">
+          {/* Email input */}
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="email"
+              className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500"
+            >
+              Adresse Email
+            </label>
             <input
               id="email"
               type="email"
@@ -130,18 +127,19 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              placeholder=" "
-              className="peer w-full rounded-lg border border-border bg-card px-4 pt-5 pb-2 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
+              placeholder="alex@eurostep.app"
+              className="w-full rounded-none border-2 border-zinc-800 bg-zinc-950/50 px-4 py-4 text-sm text-white placeholder-zinc-600 transition-all focus:border-orange-500 focus:bg-zinc-950 focus:outline-none"
             />
-            <label
-              htmlFor="email"
-              className="pointer-events-none absolute left-4 top-2 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:uppercase peer-placeholder-shown:tracking-[0.08em] peer-focus:top-2 peer-focus:text-[10px] peer-focus:tracking-[0.12em] peer-focus:text-primary"
-            >
-              Email
-            </label>
           </div>
 
-          <div className="relative">
+          {/* Password input */}
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="password"
+              className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500"
+            >
+              Mot de passe (6 car. min)
+            </label>
             <input
               id="password"
               type="password"
@@ -150,50 +148,42 @@ export default function SignupPage() {
               required
               minLength={6}
               autoComplete="new-password"
-              placeholder=" "
-              className="peer w-full rounded-lg border border-border bg-card px-4 pt-5 pb-2 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
+              placeholder="••••••••••••"
+              className="w-full rounded-none border-2 border-zinc-800 bg-zinc-950/50 px-4 py-4 text-sm text-white placeholder-zinc-600 transition-all focus:border-orange-500 focus:bg-zinc-950 focus:outline-none"
             />
-            <label
-              htmlFor="password"
-              className="pointer-events-none absolute left-4 top-2 text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:uppercase peer-placeholder-shown:tracking-[0.08em] peer-focus:top-2 peer-focus:text-[10px] peer-focus:tracking-[0.12em] peer-focus:text-primary"
-            >
-              Mot de passe
-            </label>
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-500/10 px-4 py-2.5 text-[13px] text-red-400">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-red-500 text-center">
               {error}
-            </p>
+            </div>
           )}
 
+          {/* ─── LETHAL CTA BUTTON ─── */}
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 w-full rounded-lg bg-primary py-3.5 font-display text-base uppercase tracking-wide text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+            className="mt-4 w-full rounded-sm bg-orange-600 py-4 font-display text-lg font-black italic uppercase tracking-widest text-white transition-all hover:bg-orange-500 active:scale-[0.98] disabled:opacity-50"
           >
-            {loading ? 'Création...' : 'Créer mon compte'}
+            {loading ? 'Création...' : 'Créer Mon Compte'}
           </button>
         </form>
 
-        <div className="mt-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground">ou</span>
-          <div className="h-px flex-1 bg-border" />
+        {/* ─── SECONDARY ACTION (LOGIN) ─── */}
+        <div className="mt-8 flex flex-col items-center">
+          <Link
+            href="/login"
+            className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-white transition-colors"
+          >
+            Déjà inscrit ? <span className="text-orange-500 underline underline-offset-4">Se Connecter</span>
+          </Link>
         </div>
-
-        <Link
-          href="/login"
-          className="mt-6 flex w-full items-center justify-center rounded-lg border border-border py-3.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
-        >
-          Se connecter
-        </Link>
       </div>
 
-      {/* Bottom: Footer */}
-      <footer className="px-6 pb-10 pt-6 text-center">
-        <p className="text-[11px] text-muted-foreground/50">
-          En continuant, tu acceptes les conditions d'utilisation.
+      {/* ─── FOOTER ─── */}
+      <footer className="relative z-10 px-6 pb-6 text-center">
+        <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-zinc-700">
+          EUROSTEP · 2026
         </p>
       </footer>
     </div>

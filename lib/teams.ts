@@ -237,14 +237,6 @@ export const TEAMS: Record<string, TeamData> = {
     colors: { primary: '#DC052D', secondary: '#0066B2', accent: '#FFFFFF' },
     starPlayer: { name: 'Serge Ibaka', number: '9', position: 'Center', imageUrl: 'https://cdn.nba.com/headshots/nba/latest/1040x760/201935.png' },
   },
-  'Paris Basketball': {
-    id: 'paris',
-    name: 'Paris Basketball',
-    shortName: 'Paris',
-    city: 'Paris',
-    colors: { primary: '#111111', secondary: '#FFFFFF', accent: '#00A3E0' },
-    starPlayer: { name: 'T.J. Shorts II', number: '0', position: 'Guard' },
-  },
 
   // ==================
   // NBA (via BallDontLie API)

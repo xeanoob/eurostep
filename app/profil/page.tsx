@@ -91,8 +91,8 @@ export default function ProfilPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="mx-auto flex min-h-svh max-w-md flex-col items-center justify-center bg-gray-50">
-        <div className="size-8 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+      <div className="mx-auto flex min-h-svh max-w-md flex-col items-center justify-center bg-zinc-950">
+        <div className="size-8 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -101,9 +101,9 @@ export default function ProfilPage() {
   const avatarUrl = profile?.avatar_url
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-md flex-col bg-gray-50 pb-24 text-gray-900">
+    <div className="mx-auto flex min-h-svh max-w-md flex-col bg-zinc-950 pb-24 text-zinc-100">
       {/* Background Effect */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] bg-gradient-to-b from-blue-50 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] bg-gradient-to-b from-orange-500/10 to-transparent" />
 
       {/* Header */}
       <motion.header 
@@ -114,11 +114,11 @@ export default function ProfilPage() {
       >
         <div className="relative">
           {avatarFile ? (
-            <img src={URL.createObjectURL(avatarFile)} alt="Preview" className="size-24 rounded-full object-cover shadow-md border-4 border-white" />
+            <img src={URL.createObjectURL(avatarFile)} alt="Preview" className="size-24 rounded-full object-cover shadow-md border-4 border-zinc-950" />
           ) : avatarUrl ? (
-            <img src={avatarUrl} alt={username} className="size-24 rounded-full object-cover shadow-md border-4 border-white" />
+            <img src={avatarUrl} alt={username} className="size-24 rounded-full object-cover shadow-md border-4 border-zinc-950" />
           ) : (
-            <div className="flex size-24 items-center justify-center rounded-full bg-blue-600 text-3xl font-bold text-white shadow-md border-4 border-white">
+            <div className="flex size-24 items-center justify-center rounded-full bg-orange-500 text-3xl font-bold text-white shadow-md border-4 border-zinc-950">
               {username[0]?.toUpperCase()}
             </div>
           )}
@@ -127,15 +127,15 @@ export default function ProfilPage() {
               setAvatarUrlInput(avatarUrl || '')
               setIsEditingAvatar(!isEditingAvatar)
             }}
-            className="absolute bottom-0 right-0 rounded-full bg-blue-600 p-2 text-white shadow-md border-2 border-white transition-transform hover:scale-105"
+            className="absolute bottom-0 right-0 rounded-full bg-orange-500 p-2 text-white shadow-md border-2 border-zinc-950 transition-transform hover:scale-105"
           >
             <Camera className="size-4" />
           </button>
         </div>
 
         {isEditingAvatar && (
-          <div className="mt-6 flex w-full flex-col gap-3 rounded-2xl bg-white p-4 border border-gray-200 shadow-sm">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Nouvelle photo</p>
+          <div className="mt-6 flex w-full flex-col gap-3 rounded-2xl bg-zinc-900 p-4 border border-zinc-800 shadow-sm">
+            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Nouvelle photo</p>
             <input 
               type="file"
               accept="image/*"
@@ -144,7 +144,7 @@ export default function ProfilPage() {
                   setAvatarFile(e.target.files[0])
                 }
               }}
-              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+              className="w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700"
             />
             <div className="flex gap-3 mt-2">
               <button 
@@ -152,13 +152,13 @@ export default function ProfilPage() {
                   setIsEditingAvatar(false)
                   setAvatarFile(null)
                 }}
-                className="flex-1 rounded-xl bg-gray-100 py-3 text-xs font-bold uppercase tracking-widest text-gray-500 transition-colors hover:bg-gray-200"
+                className="flex-1 rounded-xl bg-zinc-800 py-3 text-xs font-bold uppercase tracking-widest text-zinc-400 transition-colors hover:bg-zinc-700"
               >
                 Annuler
               </button>
               <button 
                 onClick={handleSaveAvatar}
-                className="flex-1 rounded-xl bg-blue-600 py-3 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-blue-700"
+                className="flex-1 rounded-xl bg-orange-500 py-3 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-orange-600"
               >
                 Enregistrer
               </button>
@@ -166,8 +166,8 @@ export default function ProfilPage() {
           </div>
         )}
 
-        <h1 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">{username}</h1>
-        <p className="mt-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-blue-600">
+        <h1 className="mt-6 text-3xl font-bold tracking-tight text-white">{username}</h1>
+        <p className="mt-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-orange-500">
           Membre EuroStep
         </p>
       </motion.header>
@@ -178,26 +178,26 @@ export default function ProfilPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex items-center justify-between rounded-2xl bg-white p-5 border border-gray-200 shadow-sm"
+          className="flex items-center justify-between rounded-2xl bg-zinc-900 p-5 border border-zinc-800 shadow-sm"
         >
           <div className="flex flex-col items-center">
             <Trophy className="mb-2 size-4 text-yellow-500" />
-            <p className="text-3xl font-bold tabular-nums leading-none text-gray-900">{stats.totalPoints}</p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-gray-400">Points</p>
+            <p className="text-3xl font-bold tabular-nums leading-none text-white">{stats.totalPoints}</p>
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">Points</p>
           </div>
-          <div className="h-10 w-px bg-gray-200" />
+          <div className="h-10 w-px bg-zinc-800" />
           <div className="flex flex-col items-center">
             <Target className="mb-2 size-4 text-pink-500" />
-            <p className="text-3xl font-bold tabular-nums leading-none text-gray-900">{stats.exactScores}</p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-gray-400">Exacts</p>
+            <p className="text-3xl font-bold tabular-nums leading-none text-white">{stats.exactScores}</p>
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">Exacts</p>
           </div>
-          <div className="h-10 w-px bg-gray-200" />
+          <div className="h-10 w-px bg-zinc-800" />
           <div className="flex flex-col items-center">
-            <TrendingUp className="mb-2 size-4 text-blue-500" />
-            <p className="text-3xl font-bold tabular-nums leading-none text-gray-900">
-              {stats.successRate}<span className="text-lg text-gray-400">%</span>
+            <TrendingUp className="mb-2 size-4 text-orange-500" />
+            <p className="text-3xl font-bold tabular-nums leading-none text-white">
+              {stats.successRate}<span className="text-lg text-zinc-500">%</span>
             </p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-gray-400">Réussite</p>
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">Réussite</p>
           </div>
         </motion.section>
 
@@ -207,13 +207,13 @@ export default function ProfilPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 flex items-center gap-2">
+          <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 flex items-center gap-2">
             <CalendarDays className="size-3" /> Derniers pronostics
           </p>
 
           {predictions.length === 0 && (
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-              <p className="text-sm font-medium text-gray-500">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-center shadow-sm">
+              <p className="text-sm font-medium text-zinc-400">
                 Aucun pronostic encore.
               </p>
             </div>
@@ -233,42 +233,42 @@ export default function ProfilPage() {
                 <div
                   key={pred.id}
                   className={`flex items-center justify-between rounded-xl p-4 border shadow-sm ${
-                    isExact ? 'border-pink-200 bg-pink-50' : 'border-gray-100 bg-white'
+                    isExact ? 'border-pink-900/50 bg-pink-950/20' : 'border-zinc-800 bg-zinc-900'
                   }`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <div className="flex -space-x-1.5">
-                        {home.logoUrl ? <img src={home.logoUrl} className="size-5 rounded-full bg-gray-50 border border-white" /> : <div className="size-5 rounded-full bg-gray-100 border border-white" />}
-                        {away.logoUrl ? <img src={away.logoUrl} className="size-5 rounded-full bg-gray-50 border border-white" /> : <div className="size-5 rounded-full bg-gray-100 border border-white" />}
+                        {home.logoUrl ? <img src={home.logoUrl} className="size-5 rounded-full bg-zinc-800 border border-zinc-900" /> : <div className="size-5 rounded-full bg-zinc-800 border border-zinc-900" />}
+                        {away.logoUrl ? <img src={away.logoUrl} className="size-5 rounded-full bg-zinc-800 border border-zinc-900" /> : <div className="size-5 rounded-full bg-zinc-800 border border-zinc-900" />}
                       </div>
-                      <p className="text-xs font-bold text-gray-900">
-                        {home.shortName} <span className="text-gray-400 font-normal">vs</span> {away.shortName}
+                      <p className="text-xs font-bold text-white">
+                        {home.shortName} <span className="text-zinc-500 font-normal">vs</span> {away.shortName}
                       </p>
                     </div>
                     
                     <div className="mt-2 flex gap-4">
-                      <p className="text-[10px] font-medium text-gray-500">
-                        Prono <span className="font-bold text-gray-900">{pred.predicted_home_score}–{pred.predicted_away_score}</span>
+                      <p className="text-[10px] font-medium text-zinc-400">
+                        Prono <span className="font-bold text-white">{pred.predicted_home_score}–{pred.predicted_away_score}</span>
                       </p>
                       {isFinished && (
-                        <p className="text-[10px] font-medium text-gray-500">
-                          Réel <span className="font-bold text-gray-900">{m.home_score}–{m.away_score}</span>
+                        <p className="text-[10px] font-medium text-zinc-400">
+                          Réel <span className="font-bold text-white">{m.home_score}–{m.away_score}</span>
                         </p>
                       )}
                     </div>
                     {isExact && (
-                      <p className="mt-1.5 text-[9px] font-black uppercase tracking-widest text-pink-600">Score exact</p>
+                      <p className="mt-1.5 text-[9px] font-black uppercase tracking-widest text-pink-500">Score exact</p>
                     )}
                   </div>
 
                   <div className="flex flex-col items-end">
                     {isFinished ? (
-                      <span className={`text-xl font-bold tabular-nums leading-none ${isWon ? 'text-green-600' : 'text-gray-300'}`}>
+                      <span className={`text-xl font-bold tabular-nums leading-none ${isWon ? 'text-green-500' : 'text-zinc-600'}`}>
                         {isWon ? `+${pred.points_earned}` : '0'}
                       </span>
                     ) : (
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-blue-500">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-orange-500">
                         En attente
                       </span>
                     )}
@@ -288,15 +288,15 @@ export default function ProfilPage() {
         >
           <Link
             href="/ligue"
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white border border-gray-200 py-4 text-[10px] font-bold uppercase tracking-widest text-gray-700 transition-colors hover:bg-gray-50 shadow-sm"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 border border-zinc-800 py-4 text-[10px] font-bold uppercase tracking-widest text-zinc-300 transition-colors hover:bg-zinc-800 shadow-sm"
           >
             Ligue
-            <ArrowRight className="size-3 text-gray-400" />
+            <ArrowRight className="size-3 text-zinc-500" />
           </Link>
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-50 border border-red-100 py-4 text-[10px] font-bold uppercase tracking-widest text-red-600 transition-colors hover:bg-red-100 shadow-sm"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-950/20 border border-red-900/50 py-4 text-[10px] font-bold uppercase tracking-widest text-red-500 transition-colors hover:bg-red-900/30 shadow-sm"
           >
             <LogOut className="size-3" />
             Déconnexion

@@ -25,7 +25,7 @@ export function BottomNav() {
       aria-label="Navigation principale"
       className="fixed inset-x-0 bottom-6 z-50 px-4 pb-[env(safe-area-inset-bottom)] pointer-events-none"
     >
-      <div className="mx-auto max-w-[340px] pointer-events-auto rounded-full bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.05)] border border-gray-200">
+      <div className="mx-auto max-w-[340px] pointer-events-auto rounded-xl bg-[#161B26] shadow-2xl border border-white/5">
         <ul className="flex items-center justify-around px-1 py-1">
           {tabs.map(({ label, icon: Icon, href }) => {
             const active = isActive(href)
@@ -34,7 +34,7 @@ export function BottomNav() {
                 {active && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 rounded-full bg-blue-50"
+                    className="absolute inset-0 rounded-lg bg-zinc-800 border border-zinc-700"
                     initial={false}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
@@ -42,11 +42,11 @@ export function BottomNav() {
                 <Link
                   href={href}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative z-10 flex w-full flex-col items-center gap-1 py-2 transition-transform active:scale-90 ${active ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                  className={`relative z-10 flex w-full flex-col items-center gap-1 py-2 transition-transform active:scale-90 ${active ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                 >
                   <Icon
-                    className={`size-[22px] transition-colors ${active ? 'text-blue-600' : ''}`}
+                    className={`size-[22px] transition-colors ${active ? 'text-white' : ''}`}
                     strokeWidth={active ? 2.5 : 2}
                     aria-hidden="true"
                   />

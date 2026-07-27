@@ -151,20 +151,20 @@ export default function VestiairePage() {
   const pendingFriends = friends.filter(f => f.status === 'pending')
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-md flex-col bg-gray-50 text-gray-900">
+    <div className="mx-auto flex min-h-svh max-w-md flex-col bg-zinc-950 text-zinc-100">
       {/* Header */}
       <header className="px-6 pt-14 pb-4">
-        <h1 className="font-bold text-3xl tracking-tight text-gray-900">
-          Vest<span className="text-blue-600">iaire</span>
+        <h1 className="font-bold text-3xl tracking-tight text-white">
+          Vest<span className="text-orange-500">iaire</span>
         </h1>
 
-        <div className="mt-6 flex border-b border-gray-200">
+        <div className="mt-6 flex border-b border-zinc-800">
           {(['ligue', 'mp', 'amis'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 pb-3 text-[11px] font-bold uppercase tracking-widest transition-colors ${
-                tab === t ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-gray-900'
+                tab === t ? 'border-b-2 border-orange-500 text-orange-500' : 'text-zinc-500 hover:text-white'
               }`}
             >
               {t === 'ligue' && 'Ligue'}
@@ -187,11 +187,11 @@ export default function VestiairePage() {
             >
               <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pt-2 pb-36 flex flex-col gap-3">
                 {authLoading || loadingLeague ? (
-                  <p className="py-12 text-center text-sm text-gray-400 animate-pulse">Chargement...</p>
+                  <p className="py-12 text-center text-sm text-zinc-500 animate-pulse">Chargement...</p>
                 ) : !leagueId ? (
-                  <p className="py-12 text-center text-sm text-gray-500">Rejoins une ligue pour accéder au vestiaire.</p>
+                  <p className="py-12 text-center text-sm text-zinc-400">Rejoins une ligue pour accéder au vestiaire.</p>
                 ) : messages.length === 0 ? (
-                  <p className="py-12 text-center text-sm text-gray-500">Aucun message. Lance la conversation !</p>
+                  <p className="py-12 text-center text-sm text-zinc-400">Aucun message. Lance la conversation !</p>
                 ) : (
                   messages.map((msg, i) => {
                     const isOwn = msg.user_id === user?.id
@@ -201,14 +201,14 @@ export default function VestiairePage() {
                     return (
                       <div key={msg.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} ${showSender ? 'mt-3' : ''}`}>
                         {showSender && (
-                          <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.1em] text-gray-500">{senderName}</p>
+                          <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.1em] text-zinc-500">{senderName}</p>
                         )}
                         <div className={`max-w-[78%] px-3.5 py-2.5 text-[15px] leading-snug shadow-sm border ${
-                            isOwn ? 'rounded-2xl rounded-br-sm bg-blue-600 text-white border-blue-700' : 'rounded-2xl rounded-bl-sm bg-white text-gray-900 border-gray-200'
+                            isOwn ? 'rounded-2xl rounded-br-sm bg-orange-500 text-white border-orange-600' : 'rounded-2xl rounded-bl-sm bg-zinc-900 text-zinc-100 border-zinc-800'
                           }`}>
                           {msg.content}
                         </div>
-                        <p className={`mt-1 text-[10px] tabular-nums text-gray-400 ${isOwn ? 'pr-0.5' : 'pl-0.5'}`}>
+                        <p className={`mt-1 text-[10px] tabular-nums text-zinc-500 ${isOwn ? 'pr-0.5' : 'pl-0.5'}`}>
                           {formatTime(msg.created_at)}
                         </p>
                       </div>
@@ -219,16 +219,16 @@ export default function VestiairePage() {
               
               {/* League Input */}
               {leagueId && (
-                <div className="absolute inset-x-0 bottom-[95px] z-40 bg-gray-50 px-4 py-3 border-t border-gray-200 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+                <div className="absolute inset-x-0 bottom-[95px] z-40 bg-zinc-950 px-4 py-3 border-t border-zinc-800 shadow-[0_-10px_30px_rgba(0,0,0,0.2)]">
                   <form onSubmit={(e) => { e.preventDefault(); handleSendLeague() }} className="flex items-center gap-2.5">
                     <input
                       type="text"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       placeholder="Chambre tes potes de ligue..."
-                      className="flex-1 rounded-full bg-white border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 shadow-sm"
+                      className="flex-1 rounded-full bg-zinc-900 border border-zinc-800 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-orange-500 shadow-sm"
                     />
-                    <button type="submit" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition-transform active:scale-90">
+                    <button type="submit" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white shadow-sm transition-transform active:scale-90">
                       <ArrowUp className="size-4" strokeWidth={2.5} />
                     </button>
                   </form>
@@ -246,24 +246,24 @@ export default function VestiairePage() {
               className="flex flex-1 flex-col absolute inset-0 overflow-y-auto pb-32 px-6 pt-2"
             >
               <form onSubmit={handleAddFriend} className="mb-6 flex flex-col gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Ajouter un ami</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Ajouter un ami</p>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
                     value={friendInput}
                     onChange={(e) => setFriendInput(e.target.value)}
                     placeholder="Nom d'utilisateur exact" 
-                    className="flex-1 rounded-xl bg-white border border-gray-200 px-4 py-2 text-sm focus:outline-none focus:border-blue-600 shadow-sm"
+                    className="flex-1 rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-2 text-sm text-white focus:outline-none focus:border-orange-500 shadow-sm placeholder:text-zinc-500"
                   />
-                  <button type="submit" className="rounded-xl bg-blue-600 px-4 py-2 text-white shadow-sm transition-transform active:scale-95">
+                  <button type="submit" className="rounded-xl bg-orange-500 px-4 py-2 text-white shadow-sm transition-transform active:scale-95">
                     <UserPlus className="size-4" />
                   </button>
                 </div>
-                {friendMessage && <p className="text-xs text-blue-600">{friendMessage}</p>}
+                {friendMessage && <p className="text-xs text-orange-500">{friendMessage}</p>}
               </form>
 
               {loadingFriends ? (
-                <p className="py-8 text-center text-sm text-gray-400 animate-pulse">Chargement...</p>
+                <p className="py-8 text-center text-sm text-zinc-500 animate-pulse">Chargement...</p>
               ) : (
                 <div className="flex flex-col gap-6">
                   {pendingFriends.length > 0 && (
@@ -271,24 +271,24 @@ export default function VestiairePage() {
                       <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-orange-500">En attente ({pendingFriends.length})</p>
                       <div className="flex flex-col gap-2">
                         {pendingFriends.map(f => (
-                          <div key={f.user_id} className="flex items-center justify-between rounded-xl bg-white p-3 border border-gray-200 shadow-sm">
+                          <div key={f.user_id} className="flex items-center justify-between rounded-xl bg-zinc-900 p-3 border border-zinc-800 shadow-sm">
                             <div className="flex items-center gap-3">
                               {f.avatar_url ? (
-                                <img src={f.avatar_url} className="size-10 rounded-full object-cover border border-gray-100" />
+                                <img src={f.avatar_url} className="size-10 rounded-full object-cover border border-zinc-800" />
                               ) : (
-                                <div className="size-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                                  <Users className="size-4 text-gray-400" />
+                                <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                                  <Users className="size-4 text-zinc-500" />
                                 </div>
                               )}
-                              <p className="text-sm font-bold text-gray-900">{f.username}</p>
+                              <p className="text-sm font-bold text-white">{f.username}</p>
                             </div>
                             <div className="flex gap-2">
                               {!f.is_requester && (
-                                <button onClick={() => handleAcceptFriend(f.user_id)} className="rounded-full bg-green-50 p-2 text-green-600 border border-green-200 hover:bg-green-100">
+                                <button onClick={() => handleAcceptFriend(f.user_id)} className="rounded-full bg-green-900/30 p-2 text-green-500 border border-green-800/50 hover:bg-green-900/50">
                                   <Check className="size-4" />
                                 </button>
                               )}
-                              <button onClick={() => handleRemoveFriend(f.user_id)} className="rounded-full bg-red-50 p-2 text-red-600 border border-red-200 hover:bg-red-100">
+                              <button onClick={() => handleRemoveFriend(f.user_id)} className="rounded-full bg-red-900/30 p-2 text-red-500 border border-red-800/50 hover:bg-red-900/50">
                                 <X className="size-4" />
                               </button>
                             </div>
@@ -299,28 +299,28 @@ export default function VestiairePage() {
                   )}
 
                   <section>
-                    <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-500">Mes amis ({acceptedFriends.length})</p>
+                    <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Mes amis ({acceptedFriends.length})</p>
                     {acceptedFriends.length === 0 ? (
-                      <p className="text-xs text-gray-400">Tu n'as pas encore d'amis ajoutés.</p>
+                      <p className="text-xs text-zinc-400">Tu n'as pas encore d'amis ajoutés.</p>
                     ) : (
                       <div className="flex flex-col gap-2">
                         {acceptedFriends.map(f => (
-                          <div key={f.user_id} className="flex items-center justify-between rounded-xl bg-white p-3 border border-gray-200 shadow-sm">
+                          <div key={f.user_id} className="flex items-center justify-between rounded-xl bg-zinc-900 p-3 border border-zinc-800 shadow-sm">
                             <div className="flex items-center gap-3">
                               {f.avatar_url ? (
-                                <img src={f.avatar_url} className="size-10 rounded-full object-cover border border-gray-100" />
+                                <img src={f.avatar_url} className="size-10 rounded-full object-cover border border-zinc-800" />
                               ) : (
-                                <div className="size-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                                  <Users className="size-4 text-gray-400" />
+                                <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700">
+                                  <Users className="size-4 text-zinc-500" />
                                 </div>
                               )}
-                              <p className="text-sm font-bold text-gray-900">{f.username}</p>
+                              <p className="text-sm font-bold text-white">{f.username}</p>
                             </div>
                             <div className="flex gap-2">
-                              <Link href={`/vestiaire/pm/${f.user_id}`} className="rounded-full bg-blue-50 p-2 text-blue-600 border border-blue-200 hover:bg-blue-100">
+                              <Link href={`/vestiaire/pm/${f.user_id}`} className="rounded-full bg-orange-500/20 p-2 text-orange-400 border border-orange-500/30 hover:bg-orange-500/30">
                                 <MessageSquare className="size-4" />
                               </Link>
-                              <button onClick={() => handleRemoveFriend(f.user_id)} className="rounded-full bg-gray-50 p-2 text-gray-400 border border-gray-200 hover:text-red-500 hover:border-red-200 hover:bg-red-50">
+                              <button onClick={() => handleRemoveFriend(f.user_id)} className="rounded-full bg-zinc-800 p-2 text-zinc-400 border border-zinc-700 hover:text-red-400 hover:border-red-900 hover:bg-red-900/30">
                                 <X className="size-4" />
                               </button>
                             </div>
@@ -343,30 +343,30 @@ export default function VestiairePage() {
               className="flex flex-1 flex-col absolute inset-0 overflow-y-auto pb-32 px-6 pt-2"
             >
               {loadingMP ? (
-                <p className="py-8 text-center text-sm text-gray-400 animate-pulse">Chargement...</p>
+                <p className="py-8 text-center text-sm text-zinc-500 animate-pulse">Chargement...</p>
               ) : conversations.length === 0 ? (
                 <div className="py-12 text-center flex flex-col items-center">
-                  <ShieldAlert className="size-8 text-gray-300 mb-3" />
-                  <p className="text-sm text-gray-500">Aucun message privé.</p>
-                  <button onClick={() => setTab('amis')} className="mt-4 text-xs font-bold uppercase tracking-widest text-blue-600 hover:underline">Aller voir mes amis</button>
+                  <ShieldAlert className="size-8 text-zinc-700 mb-3" />
+                  <p className="text-sm text-zinc-400">Aucun message privé.</p>
+                  <button onClick={() => setTab('amis')} className="mt-4 text-xs font-bold uppercase tracking-widest text-orange-500 hover:underline">Aller voir mes amis</button>
                 </div>
               ) : (
                 <div className="flex flex-col gap-2 mt-2">
                   {conversations.map(c => (
-                    <Link key={c.friendId} href={`/vestiaire/pm/${c.friendId}`} className="flex items-center gap-4 rounded-2xl bg-white p-4 border border-gray-200 hover:bg-gray-50 transition-colors shadow-sm">
+                    <Link key={c.friendId} href={`/vestiaire/pm/${c.friendId}`} className="flex items-center gap-4 rounded-2xl bg-zinc-900 p-4 border border-zinc-800 hover:bg-zinc-800 transition-colors shadow-sm">
                       {c.avatar_url ? (
-                        <img src={c.avatar_url} className="size-12 rounded-full object-cover border border-gray-100" />
+                        <img src={c.avatar_url} className="size-12 rounded-full object-cover border border-zinc-700" />
                       ) : (
-                        <div className="size-12 rounded-full bg-gray-100 border border-gray-200 flex shrink-0 items-center justify-center">
-                          <Users className="size-5 text-gray-400" />
+                        <div className="size-12 rounded-full bg-zinc-800 border border-zinc-700 flex shrink-0 items-center justify-center">
+                          <Users className="size-5 text-zinc-500" />
                         </div>
                       )}
                       <div className="flex flex-col flex-1 overflow-hidden">
                         <div className="flex justify-between items-center mb-1">
-                          <p className="font-bold text-sm text-gray-900">{c.username}</p>
-                          <p className="text-[10px] text-gray-400 font-medium">{formatTime(c.lastMessage.created_at)}</p>
+                          <p className="font-bold text-sm text-white">{c.username}</p>
+                          <p className="text-[10px] text-zinc-500 font-medium">{formatTime(c.lastMessage.created_at)}</p>
                         </div>
-                        <p className="text-xs text-gray-500 truncate">{c.lastMessage.content}</p>
+                        <p className="text-xs text-zinc-400 truncate">{c.lastMessage.content}</p>
                       </div>
                     </Link>
                   ))}

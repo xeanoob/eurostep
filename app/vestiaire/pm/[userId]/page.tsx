@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 export default function PrivateMessagePage({ params }: { params: Promise<{ userId: string }> }) {
   const router = useRouter()
   const { userId: friendId } = use(params)
-  const { user, authLoading } = useUser()
+  const { user, loading: authLoading } = useUser()
   
   const [messages, setMessages] = useState<PrivateMessage[]>([])
   const [input, setInput] = useState('')
@@ -81,15 +81,15 @@ export default function PrivateMessagePage({ params }: { params: Promise<{ userI
   }
 
   return (
-    <div className="mx-auto flex h-svh max-w-md flex-col bg-gray-50">
+    <div className="mx-auto flex h-svh max-w-md flex-col bg-zinc-950">
       {/* Header */}
-      <header className="flex items-center gap-4 px-6 pt-14 pb-4 border-b border-gray-200 bg-white">
-        <button onClick={() => router.back()} className="rounded-full bg-white p-2 border border-gray-200 transition-colors hover:bg-gray-50 text-gray-500 hover:text-gray-900 shadow-sm">
+      <header className="flex items-center gap-4 px-6 pt-14 pb-4 border-b border-zinc-800 bg-zinc-950">
+        <button onClick={() => router.back()} className="rounded-full bg-zinc-900 p-2 border border-zinc-800 transition-colors hover:bg-zinc-800 text-zinc-500 hover:text-white shadow-sm">
           <ChevronLeft className="size-5" />
         </button>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Message Privé</p>
-          <h1 className="text-xl font-bold text-gray-900">{friendName}</h1>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500">Message Privé</p>
+          <h1 className="text-xl font-bold text-white">{friendName}</h1>
         </div>
       </header>
 
@@ -97,10 +97,10 @@ export default function PrivateMessagePage({ params }: { params: Promise<{ userI
       <main ref={scrollRef} className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pt-5 pb-24">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-gray-400 animate-pulse">Chargement...</p>
+            <p className="text-sm text-zinc-500 animate-pulse">Chargement...</p>
           </div>
         ) : messages.length === 0 ? (
-          <p className="py-12 text-center text-sm text-gray-500">
+          <p className="py-12 text-center text-sm text-zinc-400">
             Aucun message. Dis-lui salut !
           </p>
         ) : (
@@ -111,11 +111,11 @@ export default function PrivateMessagePage({ params }: { params: Promise<{ userI
             return (
               <div key={msg.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} ${showSender ? 'mt-3' : ''}`}>
                 <div className={`max-w-[78%] px-3.5 py-2.5 text-[15px] leading-snug shadow-sm border ${
-                    isOwn ? 'rounded-2xl rounded-br-sm bg-blue-600 text-white border-blue-700' : 'rounded-2xl rounded-bl-sm bg-white text-gray-900 border-gray-200'
+                    isOwn ? 'rounded-2xl rounded-br-sm bg-orange-500 text-white border-orange-600' : 'rounded-2xl rounded-bl-sm bg-zinc-900 text-zinc-100 border-zinc-800'
                   }`}>
                   {msg.content}
                 </div>
-                <p className={`mt-1 text-[10px] tabular-nums text-gray-400 ${isOwn ? 'pr-0.5' : 'pl-0.5'}`}>
+                <p className={`mt-1 text-[10px] tabular-nums text-zinc-500 ${isOwn ? 'pr-0.5' : 'pl-0.5'}`}>
                   {formatTime(msg.created_at)}
                 </p>
               </div>
@@ -125,16 +125,16 @@ export default function PrivateMessagePage({ params }: { params: Promise<{ userI
       </main>
 
       {/* Input */}
-      <div className="bg-gray-50 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-200 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+      <div className="bg-zinc-950 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-zinc-800 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.2)]">
         <form onSubmit={(e) => { e.preventDefault(); handleSend() }} className="flex items-center gap-2.5">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Message privé..."
-            className="flex-1 rounded-full bg-white border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 shadow-sm"
+            className="flex-1 rounded-full bg-zinc-900 border border-zinc-800 px-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500 shadow-sm"
           />
-          <button type="submit" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition-transform active:scale-90">
+          <button type="submit" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white shadow-sm transition-transform active:scale-90">
             <ArrowUp className="size-4" strokeWidth={2.5} />
           </button>
         </form>

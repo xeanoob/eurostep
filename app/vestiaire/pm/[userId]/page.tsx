@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/components/user-provider'
 import { getPrivateMessages, sendPrivateMessage, subscribeToPrivateMessages, unsubscribeFromPrivateMessages, type PrivateMessage } from '@/lib/private-chat'
-import { ArrowUp, ChevronLeft } from 'lucide-react'
+import { ArrowUp, ChevronLeft, Loader2 } from 'lucide-react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 
@@ -97,7 +97,9 @@ export default function PrivateMessagePage({ params }: { params: Promise<{ userI
       <main ref={scrollRef} className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pt-5 pb-24">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-zinc-500 animate-pulse">Chargement...</p>
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            </div>
           </div>
         ) : messages.length === 0 ? (
           <p className="py-12 text-center text-sm text-zinc-400">

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { BottomNav } from '@/components/bottom-nav'
 import { useUser } from '@/components/user-provider'
 import { getLeaderboard, type LeaderboardEntry } from '@/lib/leaderboard'
-import { Share2, Flame } from 'lucide-react'
+import { Share2, Flame, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function ClassementPage() {
@@ -69,7 +69,9 @@ export default function ClassementPage() {
       <main className="flex flex-1 flex-col pb-28 px-4">
         {authLoading || loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-zinc-500 animate-pulse">Chargement...</p>
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            </div>
           </div>
         ) : entries.length === 0 ? (
           <div className="rounded-2xl bg-zinc-900 p-6 text-center shadow-sm border border-zinc-800">

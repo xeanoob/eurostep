@@ -10,6 +10,7 @@ import { getUserPredictions, submitPrediction } from '@/lib/predictions'
 import { MatchHeroCard } from '@/components/match-hero-card'
 import { LeagueSwitcher } from '@/components/league-switcher'
 import { createClient } from '@/lib/supabase/client'
+import { Loader2 } from 'lucide-react'
 
 interface Match {
   id: string
@@ -175,7 +176,9 @@ export default function PronosPage() {
       <main className="flex flex-1 flex-col gap-8 pb-32">
         {authLoading || loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-zinc-500 animate-pulse">Chargement...</p>
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            </div>
           </div>
         ) : matches.length === 0 ? (
           <div className="px-6 py-12 text-center border-t border-zinc-800">

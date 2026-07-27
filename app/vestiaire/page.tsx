@@ -6,12 +6,14 @@ import { useUser } from '@/components/user-provider'
 import { getMessages, sendMessage, subscribeToMessages, unsubscribeFromMessages, type Message as LeagueMessage } from '@/lib/chat'
 import { getFriendsList, sendFriendRequest, acceptFriendRequest, removeFriend, type Friend } from '@/lib/friends'
 import { getRecentConversations, type PrivateMessage } from '@/lib/private-chat'
-import { ArrowUp, UserPlus, Users, MessageSquare, Check, X, ShieldAlert } from 'lucide-react'
+import { getMyChallenges, respondToChallenge, createChallenge, REACTION_EMOJIS, type H2HChallenge } from '@/lib/reactions'
+import { getUpcomingMatches } from '@/lib/api/matches'
+import { ArrowUp, UserPlus, Users, MessageSquare, Check, X, ShieldAlert, Swords, Flame } from 'lucide-react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 
-type Tab = 'ligue' | 'amis' | 'mp'
+type Tab = 'ligue' | 'amis' | 'mp' | 'duels'
 
 export default function VestiairePage() {
   const { user, profile, leagueId, loading: authLoading } = useUser()
@@ -33,6 +35,16 @@ export default function VestiairePage() {
   // MP State
   const [conversations, setConversations] = useState<any[]>([])
   const [loadingMP, setLoadingMP] = useState(true)
+
+  // Duels State
+  const [challenges, setChallenges] = useState<H2HChallenge[]>([])
+  const [loadingDuels, setLoadingDuels] = useState(true)
+  const [showNewDuel, setShowNewDuel] = useState(false)
+  const [duelFriend, setDuelFriend] = useState('')
+  const [duelMatch, setDuelMatch] = useState('')
+  const [duelPoints, setDuelPoints] = useState(5)
+  const [availableMatches, setAvailableMatches] = useState<any[]>([])
+  const [duelFriendsList, setDuelFriendsList] = useState<Friend[]>([])
 
   // 1. League Chat Effect
   useEffect(() => {
@@ -89,6 +101,22 @@ export default function VestiairePage() {
     load()
   }, [tab, user])
 
+  // 4. Duels Effect
+  useEffect(() => {
+    if (tab !== 'duels' || !user) return
+    async function load() {
+      const [c, matches, friendsList] = await Promise.all([
+        getMyChallenges(user!.id),
+        getUpcomingMatches(),
+        getFriendsList(user!.id),
+      ])
+      setChallenges(c)
+      setAvailableMatches(matches)
+      setDuelFriendsList(friendsList.filter(f => f.status === 'accepted'))
+      setLoadingDuels(false)
+    }
+    load()
+  }, [tab, user])
 
   // League Chat Actions
   async function handleSendLeague() {
@@ -121,7 +149,6 @@ export default function VestiairePage() {
     } else {
       setFriendMessage('Demande envoyée !')
       setFriendInput('')
-      // Refresh list
       const list = await getFriendsList(user.id)
       setFriends(list)
     }
@@ -143,12 +170,36 @@ export default function VestiairePage() {
     setFriends(list)
   }
 
+  // Duel Actions
+  async function handleCreateDuel(e: React.FormEvent) {
+    e.preventDefault()
+    if (!user || !duelFriend || !duelMatch) return
+    await createChallenge(duelMatch, user.id, duelFriend, duelPoints)
+    setShowNewDuel(false)
+    setDuelFriend('')
+    setDuelMatch('')
+    setDuelPoints(5)
+    const c = await getMyChallenges(user.id)
+    setChallenges(c)
+  }
+
+  async function handleRespondDuel(challengeId: string, accept: boolean) {
+    await respondToChallenge(challengeId, accept)
+    if (user) {
+      const c = await getMyChallenges(user.id)
+      setChallenges(c)
+    }
+  }
+
   function formatTime(iso: string) {
     return new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
   }
 
   const acceptedFriends = friends.filter(f => f.status === 'accepted')
   const pendingFriends = friends.filter(f => f.status === 'pending')
+
+  const pendingChallenges = challenges.filter(c => c.status === 'pending')
+  const activeChallenges = challenges.filter(c => c.status === 'accepted')
 
   return (
     <div className="mx-auto flex min-h-svh max-w-md flex-col bg-zinc-950 text-zinc-100">
@@ -159,15 +210,23 @@ export default function VestiairePage() {
         </h1>
 
         <div className="mt-6 flex border-b border-zinc-800">
-          {(['ligue', 'mp', 'amis'] as Tab[]).map((t) => (
+          {(['ligue', 'duels', 'mp', 'amis'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 pb-3 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+              className={`flex-1 pb-3 text-[11px] font-bold uppercase tracking-widest transition-colors relative ${
                 tab === t ? 'border-b-2 border-orange-500 text-orange-500' : 'text-zinc-500 hover:text-white'
               }`}
             >
               {t === 'ligue' && 'Ligue'}
+              {t === 'duels' && (
+                <span className="flex items-center justify-center gap-1">
+                  Duels
+                  {pendingChallenges.filter(c => c.challenged_id === user?.id).length > 0 && (
+                    <span className="size-1.5 rounded-full bg-orange-500 animate-pulse" />
+                  )}
+                </span>
+              )}
               {t === 'mp' && 'Messages'}
               {t === 'amis' && 'Amis'}
             </button>
@@ -208,6 +267,20 @@ export default function VestiairePage() {
                           }`}>
                           {msg.content}
                         </div>
+                        {/* Quick Reaction Bar for other users' messages */}
+                        {!isOwn && (
+                          <div className="flex gap-1 mt-1 ml-1">
+                            {REACTION_EMOJIS.map(emoji => (
+                              <button
+                                key={emoji}
+                                className="text-xs opacity-0 group-hover:opacity-100 hover:opacity-100 hover:scale-125 transition-all px-0.5"
+                                title={emoji}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                         <p className={`mt-1 text-[10px] tabular-nums text-zinc-500 ${isOwn ? 'pr-0.5' : 'pl-0.5'}`}>
                           {formatTime(msg.created_at)}
                         </p>
@@ -232,6 +305,204 @@ export default function VestiairePage() {
                       <ArrowUp className="size-4" strokeWidth={2.5} />
                     </button>
                   </form>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {tab === 'duels' && (
+            <motion.div
+              key="duels"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              className="flex flex-1 flex-col absolute inset-0 overflow-y-auto pb-32 px-6 pt-2"
+            >
+              {/* New Duel Button */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowNewDuel(!showNewDuel)}
+                className="mb-4 w-full rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 py-3 font-bold text-sm uppercase tracking-widest text-white shadow-lg border border-orange-700 flex items-center justify-center gap-2"
+              >
+                <Swords className="size-4" />
+                Lancer un Duel
+              </motion.button>
+
+              {/* New Duel Form */}
+              <AnimatePresence>
+                {showNewDuel && (
+                  <motion.form
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden mb-4"
+                    onSubmit={handleCreateDuel}
+                  >
+                    <div className="rounded-xl bg-zinc-900 border border-zinc-800 p-4 flex flex-col gap-3">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Choisis ton adversaire</p>
+                      <select
+                        value={duelFriend}
+                        onChange={(e) => setDuelFriend(e.target.value)}
+                        className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                      >
+                        <option value="">Sélectionner un ami</option>
+                        {duelFriendsList.map(f => (
+                          <option key={f.user_id} value={f.user_id}>{f.username}</option>
+                        ))}
+                      </select>
+
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Match</p>
+                      <select
+                        value={duelMatch}
+                        onChange={(e) => setDuelMatch(e.target.value)}
+                        className="w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500"
+                      >
+                        <option value="">Sélectionner un match</option>
+                        {availableMatches.map((m: any) => (
+                          <option key={m.id} value={m.id}>
+                            {m.home_team} vs {m.away_team}
+                          </option>
+                        ))}
+                      </select>
+
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Mise (points)</p>
+                      <div className="flex items-center gap-3">
+                        {[3, 5, 10].map(pts => (
+                          <button
+                            key={pts}
+                            type="button"
+                            onClick={() => setDuelPoints(pts)}
+                            className={`flex-1 rounded-lg py-2 text-sm font-bold border transition-colors ${
+                              duelPoints === pts
+                                ? 'bg-orange-500 text-white border-orange-600'
+                                : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white'
+                            }`}
+                          >
+                            {pts} pts
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={!duelFriend || !duelMatch}
+                        className="mt-2 w-full rounded-xl bg-orange-500 py-3 text-sm font-bold uppercase tracking-widest text-white disabled:opacity-40 transition-opacity"
+                      >
+                        Envoyer le défi
+                      </button>
+                    </div>
+                  </motion.form>
+                )}
+              </AnimatePresence>
+
+              {loadingDuels ? (
+                <p className="py-8 text-center text-sm text-zinc-500 animate-pulse">Chargement...</p>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {/* Pending Duels (received) */}
+                  {pendingChallenges.filter(c => c.challenged_id === user?.id).length > 0 && (
+                    <section>
+                      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-orange-500 flex items-center gap-1.5">
+                        <Flame className="size-3" /> Défis reçus
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {pendingChallenges.filter(c => c.challenged_id === user?.id).map(c => (
+                          <motion.div
+                            key={c.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="rounded-xl bg-zinc-900 border border-orange-500/20 p-4 shadow-sm"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-sm font-bold text-white">
+                                {(c.challenger as any)?.username ?? 'Joueur'} te défie !
+                              </p>
+                              <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-bold text-orange-400 border border-orange-500/20">
+                                {c.points_wagered} pts
+                              </span>
+                            </div>
+                            <p className="text-xs text-zinc-400 mb-3">
+                              {(c.match as any)?.home_team} vs {(c.match as any)?.away_team}
+                            </p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleRespondDuel(c.id, true)}
+                                className="flex-1 rounded-lg bg-green-600 py-2 text-sm font-bold text-white flex items-center justify-center gap-1.5"
+                              >
+                                <Check className="size-4" /> Accepter
+                              </button>
+                              <button
+                                onClick={() => handleRespondDuel(c.id, false)}
+                                className="flex-1 rounded-lg bg-zinc-800 py-2 text-sm font-bold text-zinc-400 border border-zinc-700 flex items-center justify-center gap-1.5"
+                              >
+                                <X className="size-4" /> Refuser
+                              </button>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Pending Duels (sent) */}
+                  {pendingChallenges.filter(c => c.challenger_id === user?.id).length > 0 && (
+                    <section>
+                      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Défis envoyés</p>
+                      <div className="flex flex-col gap-2">
+                        {pendingChallenges.filter(c => c.challenger_id === user?.id).map(c => (
+                          <div key={c.id} className="rounded-xl bg-zinc-900 border border-zinc-800 p-4 shadow-sm opacity-70">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-bold text-white">
+                                → {(c.challenged as any)?.username ?? 'Joueur'}
+                              </p>
+                              <span className="text-xs text-zinc-500">En attente...</span>
+                            </div>
+                            <p className="text-xs text-zinc-400 mt-1">
+                              {(c.match as any)?.home_team} vs {(c.match as any)?.away_team} · {c.points_wagered} pts
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Active Duels */}
+                  {activeChallenges.length > 0 && (
+                    <section>
+                      <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Duels en cours</p>
+                      <div className="flex flex-col gap-2">
+                        {activeChallenges.map(c => {
+                          const opponent = c.challenger_id === user?.id
+                            ? (c.challenged as any)?.username
+                            : (c.challenger as any)?.username
+                          return (
+                            <div key={c.id} className="rounded-xl bg-zinc-900 border border-green-500/20 p-4 shadow-sm">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                                  <Swords className="size-3.5 text-green-400" />
+                                  vs {opponent ?? 'Joueur'}
+                                </p>
+                                <span className="rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-bold text-green-400 border border-green-500/20">
+                                  {c.points_wagered} pts en jeu
+                                </span>
+                              </div>
+                              <p className="text-xs text-zinc-400 mt-1">
+                                {(c.match as any)?.home_team} vs {(c.match as any)?.away_team}
+                              </p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </section>
+                  )}
+
+                  {challenges.length === 0 && (
+                    <div className="py-12 text-center flex flex-col items-center">
+                      <Swords className="size-8 text-zinc-700 mb-3" />
+                      <p className="text-sm text-zinc-400">Aucun duel en cours.</p>
+                      <p className="text-xs text-zinc-500 mt-1">Lance un défi à un de tes potes !</p>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -381,3 +652,4 @@ export default function VestiairePage() {
     </div>
   )
 }
+

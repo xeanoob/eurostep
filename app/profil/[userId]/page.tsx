@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { getUserStats } from '@/lib/leaderboard'
 import { getUserPredictions } from '@/lib/predictions'
 import { findTeam } from '@/lib/teams'
-import { ChevronLeft, Trophy, Target, TrendingUp, Star, Crown } from 'lucide-react'
+import { ChevronLeft, Trophy, Target, TrendingUp, Star, Crown, Flame } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/components/user-provider'
 
@@ -28,7 +28,7 @@ export default function PublicProfilePage({ params }: { params: { userId: string
   const router = useRouter()
   const { user: currentUser, loading: authLoading } = useUser()
   
-  const [profile, setProfile] = useState<{ username: string; avatar_url: string | null } | null>(null)
+  const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; current_streak: number; longest_streak: number } | null>(null)
   const [stats, setStats] = useState({ totalPoints: 0, exactScores: 0, totalPredictions: 0, successRate: 0 })
   const [predictions, setPredictions] = useState<PredictionWithMatch[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +38,7 @@ export default function PublicProfilePage({ params }: { params: { userId: string
       const supabase = createClient()
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('username, avatar_url')
+        .select('username, avatar_url, current_streak, longest_streak')
         .eq('id', params.userId)
         .single()
 
@@ -144,6 +144,14 @@ export default function PublicProfilePage({ params }: { params: { userId: string
                   <TrendingUp className="size-4 text-orange-500" />
                   <span className="text-sm font-bold text-white">{stats.successRate}% win</span>
                 </div>
+                {(profile.current_streak > 0 || profile.longest_streak > 0) && (
+                  <div className="flex items-center gap-2 rounded-xl bg-orange-500/10 px-3 py-2 border border-orange-500/20">
+                    <Flame className="size-4 text-orange-400" />
+                    <span className="text-sm font-bold text-orange-400">
+                      {profile.current_streak > 0 ? `${profile.current_streak} série` : `Record: ${profile.longest_streak}`}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

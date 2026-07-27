@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image'
+import { motion } from 'framer-motion'
 
 const players = [
   {
@@ -7,6 +10,7 @@ const players = [
     points: 118,
     avatar: '/avatars/sarah.png',
     size: 'size-14',
+    barHeight: 'h-16',
   },
   {
     rank: 1,
@@ -14,6 +18,7 @@ const players = [
     points: 125,
     avatar: '/avatars/leo.png',
     size: 'size-20',
+    barHeight: 'h-24',
   },
   {
     rank: 3,
@@ -21,8 +26,12 @@ const players = [
     points: 112,
     avatar: '/avatars/max.png',
     size: 'size-14',
+    barHeight: 'h-10',
   },
 ]
+
+// Animation order: 2nd place (0.1s), 3rd place (0.3s), 1st place (0.55s)
+const animDelay: Record<number, number> = { 2: 0.1, 3: 0.3, 1: 0.55 }
 
 export function LeaguePodium() {
   return (
@@ -39,13 +48,22 @@ export function LeaguePodium() {
         </a>
       </div>
 
-      <ol className="flex items-end justify-center gap-10">
+      <ol className="flex items-end justify-center gap-4">
         {players.map((player) => (
-          <li
+          <motion.li
             key={player.rank}
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              delay: animDelay[player.rank],
+              type: 'spring',
+              stiffness: 260,
+              damping: 20,
+            }}
             className="flex flex-col items-center gap-2"
             style={{ order: player.rank === 1 ? 1 : player.rank === 2 ? 0 : 2 }}
           >
+            {/* Avatar */}
             <div className="relative">
               <div
                 className={`${player.size} relative overflow-hidden rounded-full ${
@@ -72,6 +90,8 @@ export function LeaguePodium() {
                 {player.rank}
               </span>
             </div>
+
+            {/* Name & Points */}
             <div className="flex flex-col items-center pt-2">
               <span className="text-sm font-semibold">{player.name}</span>
               <span
@@ -83,9 +103,27 @@ export function LeaguePodium() {
                 <span className="ml-1 text-[10px] uppercase tracking-widest">pts</span>
               </span>
             </div>
-          </li>
+
+            {/* Podium Bar */}
+            <motion.div
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              transition={{
+                delay: animDelay[player.rank] + 0.15,
+                type: 'spring',
+                stiffness: 300,
+                damping: 22,
+              }}
+              className={`w-20 ${player.barHeight} origin-bottom rounded-t-lg ${
+                player.rank === 1
+                  ? 'bg-gradient-to-t from-orange-600/60 to-orange-400/20 border border-orange-500/20'
+                  : 'bg-gradient-to-t from-zinc-800/60 to-zinc-700/10 border border-white/5'
+              }`}
+            />
+          </motion.li>
         ))}
       </ol>
     </section>
   )
 }
+

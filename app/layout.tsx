@@ -1,6 +1,6 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Anton, Barlow } from 'next/font/google'
+import { Anton, Barlow, Outfit } from 'next/font/google'
 import { UserProvider } from '@/components/user-provider'
 import { DuelResolutionModal } from '@/components/duel-resolution-modal'
 import { SplashScreen } from '@/components/splash-screen'
@@ -16,6 +16,11 @@ const barlow = Barlow({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-barlow',
+})
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
 })
 
 export const metadata: Metadata = {
@@ -48,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr" className={`dark bg-[#0B0E14] text-[#f2f2f7] antialiased ${anton.variable} ${barlow.variable}`}>
+    <html lang="fr" className={`dark bg-[#0B0E14] text-[#f2f2f7] antialiased ${anton.variable} ${barlow.variable} ${outfit.variable}`}>
       <body className="font-sans font-medium selection:bg-white/20">
         <UserProvider>
           <SplashScreen />

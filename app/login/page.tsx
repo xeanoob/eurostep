@@ -56,7 +56,7 @@ export default function LoginPage() {
 
       {/* ─── HEADER & BRANDING ─── */}
       <header className="relative z-10 flex flex-col items-center px-6 pt-24 text-center">
-        <h1 className="font-display text-5xl font-black italic tracking-tighter text-white">
+        <h1 className="font-outfit text-5xl font-black tracking-tight text-white">
           Euro<span className="text-orange-500">Step</span>
         </h1>
         <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">

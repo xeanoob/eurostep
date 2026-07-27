@@ -27,7 +27,7 @@ interface Match {
 export default function PronosPage() {
   const { user, profile, loading: authLoading } = useUser()
   const [matches, setMatches] = useState<Match[]>([])
-  const [predictions, setPredictions] = useState<Record<string, { home: number; away: number }>>({})
+  const [predictions, setPredictions] = useState<Record<string, { home: number; away: number; isBoosted: boolean }>>({})
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
@@ -47,11 +47,12 @@ export default function PronosPage() {
 
       setMatches(up)
 
-      const predMap: Record<string, { home: number; away: number }> = {}
+      const predMap: Record<string, { home: number; away: number; isBoosted: boolean }> = {}
       preds.forEach((p: any) => {
         predMap[p.match_id] = {
           home: p.predicted_home_score,
           away: p.predicted_away_score,
+          isBoosted: p.is_boosted,
         }
       })
       setPredictions(predMap)
@@ -65,7 +66,10 @@ export default function PronosPage() {
     const supabase = createClient()
     const channel = supabase
       .channel('public:matches')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, (payload) => {
+        if (typeof navigator !== 'undefined' && navigator.vibrate && payload.eventType === 'UPDATE') {
+          navigator.vibrate([200, 100, 200])
+        }
         getUpcomingMatches().then(setMatches)
       })
       .subscribe()
@@ -75,15 +79,15 @@ export default function PronosPage() {
     }
   }, [user, authLoading])
 
-  async function handleSubmit(matchId: string, homeScore: number, awayScore: number) {
+  async function handleSubmit(matchId: string, homeScore: number, awayScore: number, isBoosted: boolean = false) {
     if (!user) return
     setSubmitting(matchId)
 
-    await submitPrediction(user.id, matchId, homeScore, awayScore)
+    await submitPrediction(user.id, matchId, homeScore, awayScore, isBoosted)
 
     setPredictions((prev) => ({
       ...prev,
-      [matchId]: { home: homeScore, away: awayScore },
+      [matchId]: { home: homeScore, away: awayScore, isBoosted },
     }))
 
     setSubmitting(null)
@@ -191,9 +195,13 @@ export default function PronosPage() {
                 leagueName={match.league_name}
                 homeOdds={match.home_odds}
                 awayOdds={match.away_odds}
+                matchStatus={match.status}
+                actualHomeScore={match.home_score}
+                actualAwayScore={match.away_score}
                 existingPrediction={predictions[match.id]}
                 onSubmit={handleSubmit}
                 isSubmitting={submitting === match.id}
+                hasActiveBoost={Object.values(predictions).some(p => p.isBoosted) && !predictions[match.id]?.isBoosted}
               />
             </motion.div>
           ))

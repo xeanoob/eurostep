@@ -67,6 +67,8 @@ export interface H2HChallenge {
   points_wagered: number
   status: H2HStatus
   winner_id: string | null
+  viewed_by_challenger: boolean
+  viewed_by_challenged: boolean
   created_at: string
   // Joined data
   challenger?: { username: string; avatar_url: string | null }

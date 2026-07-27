@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Anton, Barlow } from 'next/font/google'
 import { UserProvider } from '@/components/user-provider'
+import { DuelResolutionModal } from '@/components/duel-resolution-modal'
 import './globals.css'
 
 const anton = Anton({
@@ -50,6 +51,7 @@ export default function RootLayout({
       <body className="font-sans font-medium selection:bg-white/20">
         <UserProvider>
           {children}
+          <DuelResolutionModal />
         </UserProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

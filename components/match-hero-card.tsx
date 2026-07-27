@@ -19,9 +19,13 @@ interface MatchHeroCardProps {
   leagueName: string
   homeOdds?: number | null
   awayOdds?: number | null
-  existingPrediction?: { home: number; away: number } | null
-  onSubmit?: (matchId: string, homeScore: number, awayScore: number) => void
+  matchStatus?: string
+  actualHomeScore?: number | null
+  actualAwayScore?: number | null
+  existingPrediction?: { home: number; away: number; isBoosted?: boolean } | null
+  onSubmit?: (matchId: string, homeScore: number, awayScore: number, isBoosted: boolean) => void
   isSubmitting?: boolean
+  hasActiveBoost?: boolean
 }
 
 function ScoreStepper({
@@ -74,9 +78,13 @@ export function MatchHeroCard({
   leagueName,
   homeOdds: realHomeOdds,
   awayOdds: realAwayOdds,
+  matchStatus,
+  actualHomeScore,
+  actualAwayScore,
   existingPrediction,
   onSubmit,
   isSubmitting,
+  hasActiveBoost = false,
 }: MatchHeroCardProps) {
   const { leagueId } = useUser()
   const home = findTeam(homeTeamName)
@@ -84,6 +92,7 @@ export function MatchHeroCard({
 
   const [homeScore, setHomeScore] = useState(existingPrediction?.home ?? 85)
   const [awayScore, setAwayScore] = useState(existingPrediction?.away ?? 80)
+  const [isBoosted, setIsBoosted] = useState(existingPrediction?.isBoosted ?? false)
   const [submitted, setSubmitted] = useState(!!existingPrediction)
   const [showConfetti, setShowConfetti] = useState(false)
 
@@ -102,13 +111,14 @@ export function MatchHeroCard({
   const homeOdds = realHomeOdds ?? fallbackOdds.home
   const awayOdds = realAwayOdds ?? fallbackOdds.away
   const oddsMultiplier = diff > 0 ? homeOdds : diff < 0 ? awayOdds : 1
-  const potentialPoints = Math.round(10 * oddsMultiplier)
+  let potentialPoints = Math.round(10 * oddsMultiplier)
+  if (isBoosted) potentialPoints *= 2
 
   function handleSubmit() {
     if (onSubmit) {
       if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([20, 50, 20])
       playSuccess()
-      onSubmit(matchId, homeScore, awayScore)
+      onSubmit(matchId, homeScore, awayScore, isBoosted)
       setSubmitted(true)
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 2000)
@@ -125,13 +135,18 @@ export function MatchHeroCard({
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-md rounded-xl bg-[#161B26] border border-slate-800/50 shadow-xl overflow-hidden">
+    <div className={`relative mx-auto w-full max-w-md rounded-xl bg-[#161B26] border shadow-xl overflow-hidden transition-all duration-500 ${isBoosted ? 'border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]' : 'border-slate-800/50'}`}>
       {/* SECTION 1: The Visual Hero */}
       <div className="relative w-full h-48 overflow-hidden rounded-t-xl border-b border-zinc-800" style={{ background: `linear-gradient(135deg, ${home.colors.primary}18 0%, #0B0E14 50%, ${away.colors.primary}18 100%)` }}>
         {/* Dynamic team glow */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: `radial-gradient(ellipse at 15% 80%, ${home.colors.primary}30 0%, transparent 55%), radial-gradient(ellipse at 85% 80%, ${away.colors.primary}30 0%, transparent 55%)`
         }} />
+        
+        {/* Fire overlay if boosted */}
+        {isBoosted && (
+          <div className="absolute inset-0 pointer-events-none mix-blend-color-dodge opacity-40 bg-[url('https://www.transparenttextures.com/patterns/fire-pattern.png')]" />
+        )}
         {/* Background Logos (The Fade Effect) */}
         {home.logoUrl && (
           <img 
@@ -170,10 +185,50 @@ export function MatchHeroCard({
 
         {/* Center Info */}
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
-          <span className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">{dayStr}</span>
-          <span className="text-sm text-white font-bold my-0.5">{dateStr}</span>
-          <span className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">{timeStr}</span>
-          <span className="mt-2 text-3xl text-white font-black italic drop-shadow-md">Vs</span>
+          {matchStatus === 'live' ? (
+            <div className="flex flex-col items-center mt-6">
+              <span className="flex items-center gap-1.5 text-xs font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+                <span className="size-2 rounded-full bg-red-500" /> LIVE
+              </span>
+              <div className="flex items-center gap-3 mt-2 font-display text-4xl font-black text-white">
+                <motion.span 
+                  key={actualHomeScore}
+                  initial={{ backgroundColor: 'rgba(34, 197, 94, 0.5)' }}
+                  animate={{ backgroundColor: 'transparent' }}
+                  transition={{ duration: 1 }}
+                  className="px-2 rounded"
+                >
+                  {actualHomeScore ?? 0}
+                </motion.span>
+                <span className="text-zinc-600 text-2xl">-</span>
+                <motion.span 
+                  key={actualAwayScore}
+                  initial={{ backgroundColor: 'rgba(34, 197, 94, 0.5)' }}
+                  animate={{ backgroundColor: 'transparent' }}
+                  transition={{ duration: 1 }}
+                  className="px-2 rounded"
+                >
+                  {actualAwayScore ?? 0}
+                </motion.span>
+              </div>
+            </div>
+          ) : matchStatus === 'finished' ? (
+            <div className="flex flex-col items-center mt-6">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Terminé</span>
+              <div className="flex items-center gap-3 mt-1 font-display text-3xl font-black text-white">
+                <span>{actualHomeScore ?? 0}</span>
+                <span className="text-zinc-600">-</span>
+                <span>{actualAwayScore ?? 0}</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <span className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">{dayStr}</span>
+              <span className="text-sm text-white font-bold my-0.5">{dateStr}</span>
+              <span className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">{timeStr}</span>
+              <span className="mt-2 text-3xl text-white font-black italic drop-shadow-md">Vs</span>
+            </>
+          )}
         </div>
 
         {/* Team Names (Bottom Overlapping) */}
@@ -228,12 +283,36 @@ export function MatchHeroCard({
               Pronostic avant le {dateStr}
             </p>
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mt-2">
-            Gain potentiel
-          </p>
-          <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 font-display text-sm font-bold uppercase tracking-wide text-emerald-400 shadow-sm flex items-center gap-1">
-            <AnimatedCounter value={potentialPoints} /> PTS
-          </span>
+
+          <div className="flex items-center justify-between w-full mt-4 px-2">
+            <div className="flex flex-col items-start">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                Gain potentiel
+              </p>
+              <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 font-display text-sm font-bold uppercase tracking-wide text-emerald-400 shadow-sm flex items-center gap-1 mt-1">
+                <AnimatedCounter value={potentialPoints} /> PTS {isBoosted && <span className="text-orange-500 ml-1">🔥 x2</span>}
+              </span>
+            </div>
+            
+            {/* Boost Toggle */}
+            {(!hasActiveBoost || isBoosted) && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20)
+                  setIsBoosted(!isBoosted)
+                }}
+                disabled={submitted}
+                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold uppercase tracking-widest transition-all ${
+                  isBoosted 
+                    ? 'border-orange-500 bg-orange-500/20 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.3)]' 
+                    : 'border-zinc-700 bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                } ${submitted ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                🔥 Boost x2
+              </button>
+            )}
+          </div>
         </div>
 
         {/* CTA Button */}

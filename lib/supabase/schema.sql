@@ -60,6 +60,7 @@ create table public.predictions (
   predicted_home_score int not null,
   predicted_away_score int not null,
   points_earned int,
+  is_boosted boolean default false not null,
   created_at timestamptz default now() not null,
   unique(user_id, match_id)
 );
@@ -118,6 +119,8 @@ create table public.h2h_challenges (
   points_wagered int default 0 not null,
   status h2h_status default 'pending' not null,
   winner_id uuid references public.profiles(id) on delete cascade,
+  viewed_by_challenger boolean default false not null,
+  viewed_by_challenged boolean default false not null,
   created_at timestamptz default now() not null
 );
 

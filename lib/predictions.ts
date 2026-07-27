@@ -58,7 +58,8 @@ export async function submitPrediction(
   userId: string,
   matchId: string,
   homeScore: number,
-  awayScore: number
+  awayScore: number,
+  isBoosted: boolean = false
 ) {
   const { data, error } = await supabase
     .from('predictions')
@@ -68,6 +69,7 @@ export async function submitPrediction(
         match_id: matchId,
         predicted_home_score: homeScore,
         predicted_away_score: awayScore,
+        is_boosted: isBoosted,
       },
       { onConflict: 'user_id,match_id' }
     )
@@ -199,7 +201,7 @@ export async function scorePredictionsForMatch(matchId: string) {
   // Get all predictions for this match
   const { data: predictions } = await supabase
     .from('predictions')
-    .select('id, predicted_home_score, predicted_away_score')
+    .select('id, user_id, predicted_home_score, predicted_away_score, is_boosted')
     .eq('match_id', matchId)
 
   if (!predictions) return
@@ -211,7 +213,7 @@ export async function scorePredictionsForMatch(matchId: string) {
 
   // Calculate and update points for each prediction
   for (const pred of predictions) {
-    const points = calculatePoints(
+    let points = calculatePoints(
       pred.predicted_home_score,
       pred.predicted_away_score,
       match.home_score,
@@ -220,36 +222,72 @@ export async function scorePredictionsForMatch(matchId: string) {
       awayOdds
     )
     
+    if (pred.is_boosted) {
+      points *= 2
+    }
+    
     await supabase
       .from('predictions')
       .update({ points_earned: points })
       .eq('id', pred.id)
       
     // Streak logic
-    const { data: predictionData } = await supabase
-      .from('predictions')
-      .select('user_id')
-      .eq('id', pred.id)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('current_streak, longest_streak')
+      .eq('id', pred.user_id)
       .single()
       
-    if (predictionData?.user_id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('current_streak, longest_streak')
-        .eq('id', predictionData.user_id)
-        .single()
-        
-      if (profile) {
-        const newStreak = points > 0 ? (profile.current_streak || 0) + 1 : 0;
-        const newLongest = Math.max(profile.longest_streak || 0, newStreak);
-        
-        if (newStreak !== profile.current_streak || newLongest !== profile.longest_streak) {
-          await supabase
-            .from('profiles')
-            .update({ current_streak: newStreak, longest_streak: newLongest })
-            .eq('id', predictionData.user_id)
-        }
+    if (profile) {
+      const newStreak = points > 0 ? (profile.current_streak || 0) + 1 : 0;
+      const newLongest = Math.max(profile.longest_streak || 0, newStreak);
+      
+      if (newStreak !== profile.current_streak || newLongest !== profile.longest_streak) {
+        await supabase
+          .from('profiles')
+          .update({ current_streak: newStreak, longest_streak: newLongest })
+          .eq('id', pred.user_id)
       }
+    }
+  }
+
+  // Resolve H2H Challenges for this match
+  const { data: challenges } = await supabase
+    .from('h2h_challenges')
+    .select('*')
+    .eq('match_id', matchId)
+    .eq('status', 'accepted')
+
+  if (challenges && challenges.length > 0) {
+    // Re-fetch all updated predictions to know exactly how many points each user got
+    const { data: updatedPredictions } = await supabase
+      .from('predictions')
+      .select('user_id, points_earned')
+      .eq('match_id', matchId)
+
+    const userPointsMap = new Map<string, number>()
+    updatedPredictions?.forEach(p => {
+      userPointsMap.set(p.user_id, p.points_earned || 0)
+    })
+
+    for (const challenge of challenges) {
+      const challengerPoints = userPointsMap.get(challenge.challenger_id) || 0
+      const challengedPoints = userPointsMap.get(challenge.challenged_id) || 0
+
+      let winnerId = null
+      if (challengerPoints > challengedPoints) {
+        winnerId = challenge.challenger_id
+      } else if (challengedPoints > challengerPoints) {
+        winnerId = challenge.challenged_id
+      }
+
+      await supabase
+        .from('h2h_challenges')
+        .update({
+          status: 'completed',
+          winner_id: winnerId
+        })
+        .eq('id', challenge.id)
     }
   }
 }

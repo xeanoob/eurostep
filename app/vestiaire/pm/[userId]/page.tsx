@@ -81,15 +81,15 @@ export default function PrivateMessagePage({ params }: { params: Promise<{ userI
   }
 
   return (
-    <div className="mx-auto flex h-svh max-w-md flex-col bg-background">
+    <div className="mx-auto flex h-svh max-w-md flex-col bg-gray-50">
       {/* Header */}
-      <header className="flex items-center gap-4 px-6 pt-14 pb-4 border-b border-border/50">
-        <button onClick={() => router.back()} className="rounded-full bg-white/5 p-2 transition-colors hover:bg-white/10 text-muted-foreground hover:text-white">
+      <header className="flex items-center gap-4 px-6 pt-14 pb-4 border-b border-gray-200 bg-white">
+        <button onClick={() => router.back()} className="rounded-full bg-white p-2 border border-gray-200 transition-colors hover:bg-gray-50 text-gray-500 hover:text-gray-900 shadow-sm">
           <ChevronLeft className="size-5" />
         </button>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Message Privé</p>
-          <h1 className="text-xl font-bold">{friendName}</h1>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Message Privé</p>
+          <h1 className="text-xl font-bold text-gray-900">{friendName}</h1>
         </div>
       </header>
 
@@ -97,10 +97,10 @@ export default function PrivateMessagePage({ params }: { params: Promise<{ userI
       <main ref={scrollRef} className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pt-5 pb-24">
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-muted-foreground animate-pulse">Chargement...</p>
+            <p className="text-sm text-gray-400 animate-pulse">Chargement...</p>
           </div>
         ) : messages.length === 0 ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">
+          <p className="py-12 text-center text-sm text-gray-500">
             Aucun message. Dis-lui salut !
           </p>
         ) : (
@@ -110,12 +110,12 @@ export default function PrivateMessagePage({ params }: { params: Promise<{ userI
 
             return (
               <div key={msg.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} ${showSender ? 'mt-3' : ''}`}>
-                <div className={`max-w-[78%] px-3.5 py-2.5 text-[15px] leading-snug ${
-                    isOwn ? 'rounded-2xl rounded-br-sm bg-primary text-primary-foreground' : 'rounded-2xl rounded-bl-sm bg-secondary text-foreground'
+                <div className={`max-w-[78%] px-3.5 py-2.5 text-[15px] leading-snug shadow-sm border ${
+                    isOwn ? 'rounded-2xl rounded-br-sm bg-blue-600 text-white border-blue-700' : 'rounded-2xl rounded-bl-sm bg-white text-gray-900 border-gray-200'
                   }`}>
                   {msg.content}
                 </div>
-                <p className={`mt-1 text-[10px] tabular-nums text-muted-foreground/50 ${isOwn ? 'pr-0.5' : 'pl-0.5'}`}>
+                <p className={`mt-1 text-[10px] tabular-nums text-gray-400 ${isOwn ? 'pr-0.5' : 'pl-0.5'}`}>
                   {formatTime(msg.created_at)}
                 </p>
               </div>
@@ -125,16 +125,16 @@ export default function PrivateMessagePage({ params }: { params: Promise<{ userI
       </main>
 
       {/* Input */}
-      <div className="bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-border/50 shrink-0">
+      <div className="bg-gray-50 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-200 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
         <form onSubmit={(e) => { e.preventDefault(); handleSend() }} className="flex items-center gap-2.5">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Message privé..."
-            className="flex-1 rounded-full bg-secondary px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/50"
+            className="flex-1 rounded-full bg-white border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-600 shadow-sm"
           />
-          <button type="submit" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-90">
+          <button type="submit" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm transition-transform active:scale-90">
             <ArrowUp className="size-4" strokeWidth={2.5} />
           </button>
         </form>

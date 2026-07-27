@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -10,7 +10,7 @@ import { getUserStats } from '@/lib/leaderboard'
 import { getUserPredictions } from '@/lib/predictions'
 import { findTeam } from '@/lib/teams'
 import { signOut } from '@/lib/auth'
-import { ArrowRight, LogOut, Camera, Trophy, Target, TrendingUp, CalendarDays } from 'lucide-react'
+import { ArrowRight, LogOut, Camera, Trophy, Target, TrendingUp, CalendarDays, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface PredictionWithMatch {
@@ -33,9 +33,9 @@ export default function ProfilPage() {
   const [stats, setStats] = useState({ totalPoints: 0, exactScores: 0, totalPredictions: 0, successRate: 0 })
   const [predictions, setPredictions] = useState<PredictionWithMatch[]>([])
   const [loading, setLoading] = useState(true)
-  const [isEditingAvatar, setIsEditingAvatar] = useState(false)
-  const [avatarUrlInput, setAvatarUrlInput] = useState('')
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (authLoading || !user) return
@@ -59,31 +59,29 @@ export default function ProfilPage() {
     router.refresh()
   }
 
-  async function handleSaveAvatar() {
-    if (!user) return
-    setLoading(true)
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    setIsUploadingAvatar(true)
     const supabase = createClient()
 
-    let newAvatarUrl = avatarUrlInput
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${user.id}-${Date.now()}.${fileExt}`
 
-    if (avatarFile) {
-      const fileExt = avatarFile.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file)
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, avatarFile)
-
-      if (uploadError) {
-        console.error('Error uploading avatar:', uploadError)
-        alert("Erreur lors du téléchargement de l'image. Avez-vous bien créé le bucket public 'avatars' avec les bonnes permissions ?")
-        setLoading(false)
-        return
-      }
-
-      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
-      newAvatarUrl = data.publicUrl
+    if (uploadError) {
+      console.error('Error uploading avatar:', uploadError)
+      alert("Erreur lors du téléchargement de l'image.")
+      setIsUploadingAvatar(false)
+      return
     }
+
+    const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
+    const newAvatarUrl = data.publicUrl
 
     await supabase.from('profiles').update({ avatar_url: newAvatarUrl }).eq('id', user.id)
     window.location.reload()
@@ -112,59 +110,33 @@ export default function ProfilPage() {
         transition={{ duration: 0.5 }}
         className="relative z-10 flex flex-col items-center px-6 pt-14 pb-8"
       >
-        <div className="relative">
-          {avatarFile ? (
-            <img src={URL.createObjectURL(avatarFile)} alt="Preview" className="size-24 rounded-full object-cover shadow-md border-4 border-zinc-950" />
-          ) : avatarUrl ? (
-            <img src={avatarUrl} alt={username} className="size-24 rounded-full object-cover shadow-md border-4 border-zinc-950" />
+        <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            hidden 
+            accept="image/*" 
+            onChange={handleFileSelect} 
+            disabled={isUploadingAvatar}
+          />
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={username} className={`size-24 rounded-full object-cover shadow-md border-4 border-zinc-950 transition-opacity ${isUploadingAvatar ? 'opacity-50' : 'group-hover:opacity-80'}`} />
           ) : (
-            <div className="flex size-24 items-center justify-center rounded-full bg-orange-500 text-3xl font-bold text-white shadow-md border-4 border-zinc-950">
+            <div className={`flex size-24 items-center justify-center rounded-full bg-orange-500 text-3xl font-bold text-white shadow-md border-4 border-zinc-950 transition-opacity ${isUploadingAvatar ? 'opacity-50' : 'group-hover:opacity-80'}`}>
               {username[0]?.toUpperCase()}
             </div>
           )}
-          <button 
-            onClick={() => {
-              setAvatarUrlInput(avatarUrl || '')
-              setIsEditingAvatar(!isEditingAvatar)
-            }}
-            className="absolute bottom-0 right-0 rounded-full bg-orange-500 p-2 text-white shadow-md border-2 border-zinc-950 transition-transform hover:scale-105"
-          >
-            <Camera className="size-4" />
-          </button>
-        </div>
-
-        {isEditingAvatar && (
-          <div className="mt-6 flex w-full flex-col gap-3 rounded-2xl bg-zinc-900 p-4 border border-zinc-800 shadow-sm">
-            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Nouvelle photo</p>
-            <input 
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setAvatarFile(e.target.files[0])
-                }
-              }}
-              className="w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700"
-            />
-            <div className="flex gap-3 mt-2">
-              <button 
-                onClick={() => {
-                  setIsEditingAvatar(false)
-                  setAvatarFile(null)
-                }}
-                className="flex-1 rounded-xl bg-zinc-800 py-3 text-xs font-bold uppercase tracking-widest text-zinc-400 transition-colors hover:bg-zinc-700"
-              >
-                Annuler
-              </button>
-              <button 
-                onClick={handleSaveAvatar}
-                className="flex-1 rounded-xl bg-orange-500 py-3 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-orange-600"
-              >
-                Enregistrer
-              </button>
+          
+          {isUploadingAvatar ? (
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+              <Loader2 className="size-6 text-white animate-spin" />
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera className="size-6 text-white" />
+            </div>
+          )}
+        </div>
 
         <h1 className="mt-6 text-3xl font-bold tracking-tight text-white">{username}</h1>
         <p className="mt-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-orange-500">

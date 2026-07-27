@@ -60,3 +60,56 @@ export function playSuccess() {
     // Ignore
   }
 }
+
+export function triggerHaptic() {
+  if (typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+    try {
+      window.navigator.vibrate(50)
+    } catch (e) {
+      // Ignore
+    }
+  }
+}
+
+export function playSwoosh() {
+  if (typeof window === 'undefined') return
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioContext) return
+    const ctx = new AudioContext()
+    
+    // Create white noise for swoosh
+    const bufferSize = ctx.sampleRate * 0.5 // 0.5 seconds
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1
+    }
+    
+    const noise = ctx.createBufferSource()
+    noise.buffer = buffer
+    
+    // Bandpass filter to make it sound like air/wind
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.frequency.setValueAtTime(500, ctx.currentTime)
+    filter.frequency.exponentialRampToValueAtTime(3000, ctx.currentTime + 0.2)
+    filter.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.5)
+    
+    const gainNode = ctx.createGain()
+    gainNode.gain.setValueAtTime(0, ctx.currentTime)
+    gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.1)
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5)
+    
+    noise.connect(filter)
+    filter.connect(gainNode)
+    gainNode.connect(ctx.destination)
+    
+    noise.start(ctx.currentTime)
+    noise.stop(ctx.currentTime + 0.5)
+
+    triggerHaptic()
+  } catch (e) {
+    // Ignore
+  }
+}

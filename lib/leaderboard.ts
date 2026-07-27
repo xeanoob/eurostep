@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/client'
 
 const supabase = createClient()
 
+export type FormResult = 'exact' | 'good' | 'bad'
+
 export interface LeaderboardEntry {
   rank: number
   userId: string
@@ -9,6 +11,7 @@ export interface LeaderboardEntry {
   totalPoints: number
   predictionsCount: number
   exactScores: number
+  recentForm: FormResult[]
 }
 
 export async function getLeaderboard(leagueId: string): Promise<LeaderboardEntry[]> {
@@ -28,12 +31,28 @@ export async function getLeaderboard(leagueId: string): Promise<LeaderboardEntry
 
     const { data: predictions } = await supabase
       .from('predictions')
-      .select('points_earned')
+      .select('points_earned, matches(date)')
       .eq('user_id', member.user_id)
       .not('points_earned', 'is', null)
 
     const totalPoints = predictions?.reduce((sum, p) => sum + (p.points_earned ?? 0), 0) ?? 0
-    const exactScores = predictions?.filter((p) => p.points_earned === 10).length ?? 0
+    const exactScores = predictions?.filter((p) => (p.points_earned ?? 0) >= 10).length ?? 0
+
+    // Calculate recent form
+    const sortedPredictions = [...(predictions || [])].sort((a, b) => {
+      // @ts-ignore - Supabase types might be strict here
+      const dateA = a.matches?.date ? new Date(a.matches.date).getTime() : 0
+      // @ts-ignore
+      const dateB = b.matches?.date ? new Date(b.matches.date).getTime() : 0
+      return dateB - dateA
+    })
+
+    const recentForm: FormResult[] = sortedPredictions.slice(0, 5).map(p => {
+      const pts = p.points_earned ?? 0
+      if (pts >= 10) return 'exact'
+      if (pts > 0) return 'good'
+      return 'bad'
+    })
 
     entries.push({
       rank: 0,
@@ -42,6 +61,7 @@ export async function getLeaderboard(leagueId: string): Promise<LeaderboardEntry
       totalPoints,
       predictionsCount: predictions?.length ?? 0,
       exactScores,
+      recentForm,
     })
   }
 

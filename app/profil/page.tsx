@@ -12,6 +12,7 @@ import { signOut } from '@/lib/auth'
 import { ArrowRight, LogOut, Camera, ChevronRight, Loader2, Share2, Flame, Snowflake } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import html2canvas from 'html2canvas'
+import { triggerExactScoreConfetti } from '@/lib/confetti'
 
 interface PredictionWithMatch {
   id: string
@@ -53,6 +54,12 @@ export default function ProfilPage() {
 
     load()
   }, [user, authLoading])
+
+  useEffect(() => {
+    if (predictions.some((p) => (p.points_earned ?? 0) >= 10)) {
+      triggerExactScoreConfetti()
+    }
+  }, [predictions])
 
   async function handleSignOut() {
     await signOut()

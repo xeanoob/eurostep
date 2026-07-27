@@ -9,6 +9,7 @@ import { getUpcomingMatches } from '@/lib/api/matches'
 import { getUserPredictions, submitPrediction } from '@/lib/predictions'
 import { MatchHeroCard } from '@/components/match-hero-card'
 import { LeagueSwitcher } from '@/components/league-switcher'
+import { playSwoosh } from '@/lib/sound'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 
@@ -85,6 +86,9 @@ export default function PronosPage() {
     setSubmitting(matchId)
 
     await submitPrediction(user.id, matchId, homeScore, awayScore, isBoosted)
+
+    // Play swoosh sound and haptic feedback
+    playSwoosh()
 
     setPredictions((prev) => ({
       ...prev,

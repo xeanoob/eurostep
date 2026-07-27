@@ -114,4 +114,12 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .page-transition {
+    animation: fadeIn 0.25s ease-in-out forwards;
+  }
 }

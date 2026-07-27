@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Anton, Barlow } from 'next/font/google'
 import { UserProvider } from '@/components/user-provider'
 import { DuelResolutionModal } from '@/components/duel-resolution-modal'
+import { SplashScreen } from '@/components/splash-screen'
 import './globals.css'
 
 const anton = Anton({
@@ -50,6 +51,7 @@ export default function RootLayout({
     <html lang="fr" className={`dark bg-[#0B0E14] text-[#f2f2f7] antialiased ${anton.variable} ${barlow.variable}`}>
       <body className="font-sans font-medium selection:bg-white/20">
         <UserProvider>
+          <SplashScreen />
           {children}
           <DuelResolutionModal />
         </UserProvider>

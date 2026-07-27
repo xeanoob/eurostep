@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { BottomNav } from '@/components/bottom-nav'
 import { useUser } from '@/components/user-provider'
 import { getUpcomingMatches } from '@/lib/api/matches'
@@ -179,32 +179,41 @@ export default function PronosPage() {
             </p>
           </div>
         ) : (
-          filteredMatches.map((match, index) => (
-             <motion.div 
-               key={match.id} 
-               className="px-4"
-               initial={{ opacity: 0, y: 20 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ duration: 0.5, delay: index * 0.1 }}
-             >
-              <MatchHeroCard
-                matchId={match.id}
-                homeTeamName={match.home_team}
-                awayTeamName={match.away_team}
-                scheduledAt={match.scheduled_at}
-                leagueName={match.league_name}
-                homeOdds={match.home_odds}
-                awayOdds={match.away_odds}
-                matchStatus={match.status}
-                actualHomeScore={match.home_score}
-                actualAwayScore={match.away_score}
-                existingPrediction={predictions[match.id]}
-                onSubmit={handleSubmit}
-                isSubmitting={submitting === match.id}
-                hasActiveBoost={Object.values(predictions).some(p => p.isBoosted) && !predictions[match.id]?.isBoosted}
-              />
-            </motion.div>
-          ))
+          <AnimatePresence mode="popLayout">
+            {filteredMatches.map((match, index) => (
+              <motion.div 
+                key={match.id} 
+                layout
+                className="px-4"
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 300, 
+                  damping: 24, 
+                  delay: index * 0.05 
+                }}
+              >
+                <MatchHeroCard
+                  matchId={match.id}
+                  homeTeamName={match.home_team}
+                  awayTeamName={match.away_team}
+                  scheduledAt={match.scheduled_at}
+                  leagueName={match.league_name}
+                  homeOdds={match.home_odds}
+                  awayOdds={match.away_odds}
+                  matchStatus={match.status}
+                  actualHomeScore={match.home_score}
+                  actualAwayScore={match.away_score}
+                  existingPrediction={predictions[match.id]}
+                  onSubmit={handleSubmit}
+                  isSubmitting={submitting === match.id}
+                  hasActiveBoost={Object.values(predictions).some(p => p.isBoosted) && !predictions[match.id]?.isBoosted}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
       </main>
 

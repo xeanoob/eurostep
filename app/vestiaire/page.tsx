@@ -260,12 +260,19 @@ export default function VestiairePage() {
                     const showSender = !isOwn && (i === 0 || messages[i - 1].user_id !== msg.user_id || messages[i - 1].user_id === user?.id)
 
                     return (
-                      <div key={msg.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} ${showSender ? 'mt-3' : ''}`}>
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        key={msg.id} 
+                        className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} ${showSender ? 'mt-4' : 'mt-1'}`}
+                      >
                         {showSender && (
-                          <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.1em] text-zinc-500">{senderName}</p>
+                          <p className="mb-1 text-[11px] font-medium tracking-[0.05em] text-zinc-500 ml-1">{senderName}</p>
                         )}
-                        <div className={`max-w-[78%] px-3.5 py-2.5 text-[15px] leading-snug shadow-sm border ${
-                            isOwn ? 'rounded-2xl rounded-br-sm bg-orange-500 text-white border-orange-600' : 'rounded-2xl rounded-bl-sm bg-zinc-900 text-zinc-100 border-zinc-800'
+                        <div className={`relative max-w-[80%] px-4 py-2.5 text-[15px] leading-snug shadow-lg ${
+                            isOwn 
+                              ? 'rounded-2xl rounded-br-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white border border-orange-400/20' 
+                              : 'rounded-2xl rounded-bl-sm bg-[#161B26] text-zinc-100 border border-white/5'
                           }`}>
                           {msg.content}
                         </div>
@@ -286,7 +293,7 @@ export default function VestiairePage() {
                         <p className={`mt-1 text-[10px] tabular-nums text-zinc-500 ${isOwn ? 'pr-0.5' : 'pl-0.5'}`}>
                           {formatTime(msg.created_at)}
                         </p>
-                      </div>
+                      </motion.div>
                     )
                   })
                 )}
@@ -294,17 +301,17 @@ export default function VestiairePage() {
               
               {/* League Input */}
               {leagueId && (
-                <div className="absolute inset-x-0 bottom-[95px] z-40 bg-zinc-950 px-4 py-3 border-t border-zinc-800 shadow-[0_-10px_30px_rgba(0,0,0,0.2)]">
-                  <form onSubmit={(e) => { e.preventDefault(); handleSendLeague() }} className="flex items-center gap-2.5">
+                <div className="absolute inset-x-0 bottom-[95px] z-40 px-4 py-3 bg-[#0B0E14]/80 backdrop-blur-xl border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.3)]">
+                  <form onSubmit={(e) => { e.preventDefault(); handleSendLeague() }} className="flex items-center gap-2.5 max-w-md mx-auto">
                     <input
                       type="text"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       placeholder="Chambre tes potes de ligue..."
-                      className="flex-1 rounded-full bg-zinc-900 border border-zinc-800 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-orange-500 shadow-sm"
+                      className="flex-1 rounded-full bg-white/5 border border-white/10 px-5 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:bg-white/10 transition-all shadow-inner"
                     />
-                    <button type="submit" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white shadow-sm transition-transform active:scale-90">
-                      <ArrowUp className="size-4" strokeWidth={2.5} />
+                    <button type="submit" disabled={!input.trim()} className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg transition-transform active:scale-90 disabled:opacity-50 disabled:active:scale-100 disabled:from-zinc-700 disabled:to-zinc-800">
+                      <ArrowUp className="size-5" strokeWidth={2.5} />
                     </button>
                   </form>
                 </div>

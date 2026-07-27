@@ -36,11 +36,11 @@ function ScoreStepper({
   onChange: (v: number) => void
 }) {
   return (
-    <div className="flex flex-col items-center gap-2">
-      <output className="font-display text-5xl font-bold tabular-nums leading-none tracking-tight text-white drop-shadow-md">
+    <div className="flex flex-col items-center gap-3">
+      <output className="font-display text-[64px] font-black tabular-nums leading-none tracking-tighter text-white drop-shadow-lg">
         {value}
       </output>
-      <div className="flex items-center gap-3 mt-1">
+      <div className="flex items-center gap-1 bg-[#0B0E14] p-1.5 rounded-full border border-white/5 shadow-inner">
         <button
           type="button"
           onClick={() => {
@@ -48,11 +48,12 @@ function ScoreStepper({
             playTick()
             onChange(Math.max(0, value - 1))
           }}
-          className="flex size-9 items-center justify-center rounded-md bg-zinc-800 text-white transition-colors hover:bg-zinc-700 shadow-sm border border-white/5 active:scale-95"
+          className="flex size-11 items-center justify-center rounded-full bg-white/5 text-white transition-colors hover:bg-white/10 active:scale-90 active:bg-orange-500/50"
           aria-label="Diminuer"
         >
-          <Minus className="size-4" />
+          <Minus className="size-5" strokeWidth={2.5} />
         </button>
+        <div className="w-2" />
         <button
           type="button"
           onClick={() => {
@@ -60,10 +61,10 @@ function ScoreStepper({
             playTick()
             onChange(value + 1)
           }}
-          className="flex size-9 items-center justify-center rounded-md bg-zinc-800 text-white transition-colors hover:bg-zinc-700 shadow-sm border border-white/5 active:scale-95"
+          className="flex size-11 items-center justify-center rounded-full bg-white/5 text-white transition-colors hover:bg-white/10 active:scale-90 active:bg-orange-500/50"
           aria-label="Augmenter"
         >
-          <Plus className="size-4" />
+          <Plus className="size-5" strokeWidth={2.5} />
         </button>
       </div>
     </div>
@@ -323,16 +324,16 @@ export function MatchHeroCard({
         {/* CTA Button */}
         <motion.button
           type="button"
-          whileTap={{ scale: 0.96 }}
+          whileTap={{ scale: 0.97 }}
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className={`w-full h-13 rounded-xl py-4 font-display text-lg font-bold uppercase tracking-widest text-white transition-all shadow-[inset_0px_1px_0px_rgba(255,255,255,0.2)] border ${
+          className={`w-full h-16 mt-2 rounded-2xl font-display text-xl font-black uppercase tracking-widest text-white transition-all shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)] border ${
             submitted 
-              ? 'bg-gradient-to-b from-emerald-500 to-emerald-600 border-emerald-700 hover:from-emerald-400 hover:to-emerald-500' 
-              : 'bg-gradient-to-b from-orange-500 to-orange-600 border-orange-700 hover:from-orange-400 hover:to-orange-500'
+              ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 border-emerald-400/50 shadow-[0_0_30px_rgba(52,211,153,0.3)]' 
+              : 'bg-gradient-to-r from-orange-600 to-orange-500 border-orange-500/50 hover:from-orange-500 hover:to-orange-400 shadow-[0_0_30px_rgba(249,115,22,0.2)]'
           } disabled:opacity-50`}
         >
-          {submitted ? '✓ Pronostic Validé' : isSubmitting ? 'Envoi...' : 'Valider mon EuroStep'}
+          {submitted ? '✅ Pronostic Validé' : isSubmitting ? 'Envoi...' : 'Valider mon prono'}
         </motion.button>
       </div>
 

@@ -12,6 +12,8 @@ create table public.profiles (
   id uuid references auth.users on delete cascade primary key,
   username text not null,
   avatar_url text,
+  current_streak int default 0 not null,
+  longest_streak int default 0 not null,
   created_at timestamptz default now() not null
 );
 
@@ -95,6 +97,30 @@ create table public.private_messages (
   created_at timestamptz default now() not null
 );
 
+-- Prediction Reactions
+create table public.prediction_reactions (
+  id uuid default gen_random_uuid() primary key,
+  prediction_id uuid references public.predictions(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  emoji text not null,
+  created_at timestamptz default now() not null,
+  unique(prediction_id, user_id, emoji)
+);
+
+-- Head-to-Head Challenges
+create type h2h_status as enum ('pending', 'accepted', 'rejected', 'completed');
+
+create table public.h2h_challenges (
+  id uuid default gen_random_uuid() primary key,
+  match_id uuid references public.matches(id) on delete cascade not null,
+  challenger_id uuid references public.profiles(id) on delete cascade not null,
+  challenged_id uuid references public.profiles(id) on delete cascade not null,
+  points_wagered int default 0 not null,
+  status h2h_status default 'pending' not null,
+  winner_id uuid references public.profiles(id) on delete cascade,
+  created_at timestamptz default now() not null
+);
+
 -- ========================
 -- 2. TRIGGER auto-profil
 -- ========================
@@ -124,6 +150,8 @@ alter table public.predictions enable row level security;
 alter table public.messages enable row level security;
 alter table public.friends enable row level security;
 alter table public.private_messages enable row level security;
+alter table public.prediction_reactions enable row level security;
+alter table public.h2h_challenges enable row level security;
 
 -- Profiles
 create policy "profiles_select" on public.profiles
@@ -215,6 +243,10 @@ create policy "pm_insert" on public.private_messages
 
 alter publication supabase_realtime add table public.messages;
 alter publication supabase_realtime add table public.private_messages;
+alter publication supabase_realtime add table public.matches;
+alter publication supabase_realtime add table public.predictions;
+alter publication supabase_realtime add table public.prediction_reactions;
+alter publication supabase_realtime add table public.h2h_challenges;
 
 -- ========================
 -- 5. INDEX

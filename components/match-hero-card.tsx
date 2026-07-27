@@ -127,7 +127,11 @@ export function MatchHeroCard({
   return (
     <div className="relative mx-auto w-full max-w-md rounded-xl bg-[#161B26] border border-slate-800/50 shadow-xl overflow-hidden">
       {/* SECTION 1: The Visual Hero */}
-      <div className="relative w-full h-48 bg-zinc-900 overflow-hidden rounded-t-xl border-b border-zinc-800">
+      <div className="relative w-full h-48 overflow-hidden rounded-t-xl border-b border-zinc-800" style={{ background: `linear-gradient(135deg, ${home.colors.primary}18 0%, #0B0E14 50%, ${away.colors.primary}18 100%)` }}>
+        {/* Dynamic team glow */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: `radial-gradient(ellipse at 15% 80%, ${home.colors.primary}30 0%, transparent 55%), radial-gradient(ellipse at 85% 80%, ${away.colors.primary}30 0%, transparent 55%)`
+        }} />
         {/* Background Logos (The Fade Effect) */}
         {home.logoUrl && (
           <img 

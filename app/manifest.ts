@@ -5,8 +5,10 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'EuroStep — Pronostics Basket',
     short_name: 'EuroStep',
     description: 'Pronostique le score exact des matchs de basket et défie tes potes dans la Ligue.',
-    start_url: '/',
+    start_url: '/login',
+    scope: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#0B0E14',
     theme_color: '#0B0E14',
     icons: [
@@ -21,6 +23,12 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       },
       {
+        src: '/apple-icon.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
         src: '/icon.svg',
         sizes: 'any',
         type: 'image/svg+xml',
@@ -28,3 +36,4 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
   }
 }
+

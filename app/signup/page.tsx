@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signUp } from '@/lib/auth'
 
@@ -11,6 +12,7 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [needsConfirmation, setNeedsConfirmation] = useState(false)
+  const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -39,7 +41,7 @@ export default function SignupPage() {
     }
 
     if (data?.session) {
-      window.location.href = '/'
+      router.replace('/')
       return
     }
 

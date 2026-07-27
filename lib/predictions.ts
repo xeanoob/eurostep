@@ -143,6 +143,25 @@ export async function calculateMatchPoints(matchId: string, actualHomeScore: num
       .from('predictions')
       .update({ points_earned: points })
       .eq('id', pred.id)
+
+    // Streak logic
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('current_streak, longest_streak')
+      .eq('id', pred.user_id)
+      .single()
+      
+    if (profile) {
+      const newStreak = points > 0 ? (profile.current_streak || 0) + 1 : 0;
+      const newLongest = Math.max(profile.longest_streak || 0, newStreak);
+      
+      if (newStreak !== profile.current_streak || newLongest !== profile.longest_streak) {
+        await supabase
+          .from('profiles')
+          .update({ current_streak: newStreak, longest_streak: newLongest })
+          .eq('id', pred.user_id)
+      }
+    }
   }
 }
 
@@ -200,9 +219,37 @@ export async function scorePredictionsForMatch(matchId: string) {
       homeOdds,
       awayOdds
     )
+    
     await supabase
       .from('predictions')
       .update({ points_earned: points })
       .eq('id', pred.id)
+      
+    // Streak logic
+    const { data: predictionData } = await supabase
+      .from('predictions')
+      .select('user_id')
+      .eq('id', pred.id)
+      .single()
+      
+    if (predictionData?.user_id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('current_streak, longest_streak')
+        .eq('id', predictionData.user_id)
+        .single()
+        
+      if (profile) {
+        const newStreak = points > 0 ? (profile.current_streak || 0) + 1 : 0;
+        const newLongest = Math.max(profile.longest_streak || 0, newStreak);
+        
+        if (newStreak !== profile.current_streak || newLongest !== profile.longest_streak) {
+          await supabase
+            .from('profiles')
+            .update({ current_streak: newStreak, longest_streak: newLongest })
+            .eq('id', predictionData.user_id)
+        }
+      }
+    }
   }
 }

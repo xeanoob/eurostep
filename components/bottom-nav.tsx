@@ -25,7 +25,7 @@ export function BottomNav() {
       aria-label="Navigation principale"
       className="fixed inset-x-0 bottom-6 z-50 px-4 pb-[env(safe-area-inset-bottom)] pointer-events-none"
     >
-      <div className="mx-auto max-w-[340px] pointer-events-auto rounded-xl bg-[#161B26] shadow-2xl border border-white/5">
+      <div className="mx-auto max-w-[340px] pointer-events-auto rounded-xl bg-[#161B26]/70 backdrop-blur-md shadow-2xl border border-white/10">
         <ul className="flex items-center justify-around px-1 py-1">
           {tabs.map(({ label, icon: Icon, href }) => {
             const active = isActive(href)
@@ -34,7 +34,7 @@ export function BottomNav() {
                 {active && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 rounded-lg bg-zinc-800 border border-zinc-700"
+                    className="absolute inset-0 rounded-lg bg-white/10 border border-white/10 backdrop-blur-md shadow-sm"
                     initial={false}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />

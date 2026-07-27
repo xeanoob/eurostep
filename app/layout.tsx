@@ -20,6 +20,15 @@ export const metadata: Metadata = {
   title: 'EuroStep — Pronostics Basket entre Potes',
   description:
     'Pronostique le score exact des matchs de basket et défie tes potes dans la Ligue.',
+  appleWebApp: {
+    title: 'EuroStep',
+    statusBarStyle: 'black-translucent',
+    capable: true,
+  },
+  applicationName: 'EuroStep',
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 export const viewport: Viewport = {

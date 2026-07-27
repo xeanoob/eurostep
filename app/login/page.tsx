@@ -42,7 +42,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative mx-auto flex min-h-svh max-w-md flex-col justify-between bg-[#0B0E14] text-zinc-100 overflow-hidden font-sans">
+    <div className="relative mx-auto flex min-h-svh max-w-md flex-col justify-between text-zinc-100 overflow-hidden font-sans">
       {/* ─── IMMERSIVE FULL-SCREEN BACKGROUND IMAGE + TEXTURED OVERLAY ─── */}
       <div className="absolute inset-0 z-0">
         <img

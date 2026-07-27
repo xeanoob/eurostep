@@ -51,7 +51,7 @@ export default function SignupPage() {
 
   if (needsConfirmation) {
     return (
-      <div className="relative mx-auto flex min-h-svh max-w-md flex-col items-center justify-center bg-[#0B0E14] px-6 text-center text-zinc-100 font-sans">
+      <div className="relative mx-auto flex min-h-svh max-w-md flex-col items-center justify-center px-6 text-center text-zinc-100 font-sans">
         <div className="mb-6 flex size-14 items-center justify-center rounded-sm bg-orange-500/10 border border-orange-500/20">
           <span className="text-2xl">✉️</span>
         </div>
@@ -70,7 +70,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="relative mx-auto flex min-h-svh max-w-md flex-col justify-between bg-[#0B0E14] text-zinc-100 overflow-hidden font-sans">
+    <div className="relative mx-auto flex min-h-svh max-w-md flex-col justify-between text-zinc-100 overflow-hidden font-sans">
       {/* ─── IMMERSIVE FULL-SCREEN BACKGROUND IMAGE + TEXTURED OVERLAY ─── */}
       <div className="absolute inset-0 z-0">
         <img

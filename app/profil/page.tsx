@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
 import { useUser } from '@/components/user-provider'
@@ -10,8 +9,9 @@ import { getUserStats } from '@/lib/leaderboard'
 import { getUserPredictions } from '@/lib/predictions'
 import { findTeam } from '@/lib/teams'
 import { signOut } from '@/lib/auth'
-import { ArrowRight, LogOut, Camera, Trophy, Target, TrendingUp, CalendarDays, Loader2 } from 'lucide-react'
+import { ArrowRight, LogOut, Camera, ChevronRight, Loader2, Share2, Flame, Snowflake } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import html2canvas from 'html2canvas'
 
 interface PredictionWithMatch {
   id: string
@@ -34,6 +34,7 @@ export default function ProfilPage() {
   const [predictions, setPredictions] = useState<PredictionWithMatch[]>([])
   const [loading, setLoading] = useState(true)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -87,10 +88,50 @@ export default function ProfilPage() {
     window.location.reload()
   }
 
+  async function handleShare() {
+    const card = document.getElementById('vip-card')
+    if (!card) return
+    
+    setIsSharing(true)
+    try {
+      // Temporarily hide the back/share buttons for a clean screenshot
+      const buttons = card.querySelectorAll('.hide-on-share')
+      buttons.forEach(b => (b as HTMLElement).style.opacity = '0')
+
+      const canvas = await html2canvas(card, { 
+        backgroundColor: '#0B0E14',
+        scale: 2 // High res
+      })
+      
+      buttons.forEach(b => (b as HTMLElement).style.opacity = '1')
+
+      const dataUrl = canvas.toDataURL('image/png')
+      const blob = await (await fetch(dataUrl)).blob()
+      const file = new File([blob], 'eurostep-card.png', { type: 'image/png' })
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Mon VIP Pass EuroStep',
+          files: [file]
+        })
+      } else {
+        const link = document.createElement('a')
+        link.download = 'eurostep-vip-pass.png'
+        link.href = dataUrl
+        link.click()
+      }
+    } catch (err) {
+      console.error(err)
+      alert("Erreur lors du partage.")
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
   if (authLoading || loading) {
     return (
-      <div className="mx-auto flex min-h-svh max-w-md flex-col items-center justify-center bg-zinc-950">
-        <div className="size-8 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
+      <div className="mx-auto flex min-h-svh max-w-md flex-col items-center justify-center">
+        <Loader2 className="size-6 text-zinc-500 animate-spin" />
       </div>
     )
   }
@@ -98,182 +139,240 @@ export default function ProfilPage() {
   const username = profile?.username ?? 'Joueur'
   const avatarUrl = profile?.avatar_url
 
+  // ─── RANKS & PROGRESS ───
+  const pts = stats.totalPoints
+  let playerTitle = 'Rookie'
+  let nextRankPts = 10
+  let currentRankMin = 0
+  
+  if (pts >= 200) { playerTitle = 'All-Star'; currentRankMin = 200; nextRankPts = 200 } // Max rank
+  else if (pts >= 100) { playerTitle = 'Starter'; currentRankMin = 100; nextRankPts = 200 }
+  else if (pts >= 30) { playerTitle = '6th Man'; currentRankMin = 30; nextRankPts = 100 }
+  else if (pts >= 10) { playerTitle = 'Bench Player'; currentRankMin = 10; nextRankPts = 30 }
+
+  const progressPct = pts >= 200 ? 100 : ((pts - currentRankMin) / (nextRankPts - currentRankMin)) * 100
+  const ptsToNext = pts >= 200 ? 0 : nextRankPts - pts
+
+  // ─── HOT/COLD STREAK ───
+  const finishedPreds = predictions.filter(p => p.matches.status === 'finished')
+  const recent3 = finishedPreds.slice(0, 3)
+  
+  let isHot = false
+  let isCold = false
+  if (recent3.length === 3) {
+    isHot = recent3.every(p => p.points_earned && p.points_earned > 0)
+    isCold = recent3.every(p => !p.points_earned || p.points_earned === 0)
+  }
+
   return (
-    <div className="mx-auto flex min-h-svh max-w-md flex-col bg-zinc-950 pb-24 text-zinc-100">
-      {/* Background Effect */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[400px] bg-gradient-to-b from-orange-500/10 to-transparent" />
+    <div className="mx-auto flex min-h-svh max-w-md flex-col pb-28 text-zinc-100">
 
-      {/* Header */}
-      <motion.header 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 flex flex-col items-center px-6 pt-14 pb-8"
-      >
-        <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            hidden 
-            accept="image/*" 
-            onChange={handleFileSelect} 
-            disabled={isUploadingAvatar}
-          />
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={username} className={`size-24 rounded-full object-cover shadow-md border-4 border-zinc-950 transition-opacity ${isUploadingAvatar ? 'opacity-50' : 'group-hover:opacity-80'}`} />
-          ) : (
-            <div className={`flex size-24 items-center justify-center rounded-full bg-orange-500 text-3xl font-bold text-white shadow-md border-4 border-zinc-950 transition-opacity ${isUploadingAvatar ? 'opacity-50' : 'group-hover:opacity-80'}`}>
-              {username[0]?.toUpperCase()}
+      {/* ─── VIP PLAYER CARD ─── */}
+      <section id="vip-card" className="relative mx-5 mt-14 rounded-3xl overflow-hidden bg-[#161B26] border border-white/5 shadow-2xl">
+        {/* Subtle top glow */}
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-orange-500/10 to-transparent" />
+        
+        <div className="relative px-6 pt-6 pb-6">
+          {/* Top row: back button + card label + Share */}
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={() => router.back()} className="hide-on-share text-zinc-500 active:text-white transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m15 18-6-6 6-6"/>
+              </svg>
+            </button>
+            <div className="flex items-center gap-2 rounded-full bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-orange-500">Statut: {playerTitle}</span>
             </div>
-          )}
-          
-          {isUploadingAvatar ? (
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
-              <Loader2 className="size-6 text-white animate-spin" />
-            </div>
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Camera className="size-6 text-white" />
-            </div>
-          )}
-        </div>
-
-        <h1 className="mt-6 text-3xl font-bold tracking-tight text-white">{username}</h1>
-        <p className="mt-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-orange-500">
-          Membre EuroStep
-        </p>
-      </motion.header>
-
-      <main className="relative z-10 flex flex-1 flex-col gap-8 px-6 pb-28">
-        {/* Stats Glassmorphism */}
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex items-center justify-between rounded-2xl bg-zinc-900 p-5 border border-zinc-800 shadow-sm"
-        >
-          <div className="flex flex-col items-center">
-            <Trophy className="mb-2 size-4 text-yellow-500" />
-            <p className="text-3xl font-bold tabular-nums leading-none text-white">{stats.totalPoints}</p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">Points</p>
+            <button onClick={handleShare} disabled={isSharing} className="hide-on-share flex size-8 items-center justify-center rounded-full bg-white/5 text-zinc-400 active:bg-white/10 transition-colors">
+              {isSharing ? <Loader2 className="size-3.5 animate-spin" /> : <Share2 className="size-3.5" />}
+            </button>
           </div>
-          <div className="h-10 w-px bg-zinc-800" />
-          <div className="flex flex-col items-center">
-            <Target className="mb-2 size-4 text-pink-500" />
-            <p className="text-3xl font-bold tabular-nums leading-none text-white">{stats.exactScores}</p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">Exacts</p>
-          </div>
-          <div className="h-10 w-px bg-zinc-800" />
-          <div className="flex flex-col items-center">
-            <TrendingUp className="mb-2 size-4 text-orange-500" />
-            <p className="text-3xl font-bold tabular-nums leading-none text-white">
-              {stats.successRate}<span className="text-lg text-zinc-500">%</span>
-            </p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-zinc-500">Réussite</p>
-          </div>
-        </motion.section>
 
-        {/* Predictions history */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 flex items-center gap-2">
-            <CalendarDays className="size-3" /> Derniers pronostics
-          </p>
-
-          {predictions.length === 0 && (
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-8 text-center shadow-sm">
-              <p className="text-sm font-medium text-zinc-400">
-                Aucun pronostic encore.
-              </p>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-3">
-            {predictions.slice(0, 10).map((pred) => {
-              const m = pred.matches
-              const isExact = pred.points_earned === 10
-              const isWon = (pred.points_earned ?? 0) > 0
-              const isFinished = m.status === 'finished'
-
-              const home = findTeam(m.home_team)
-              const away = findTeam(m.away_team)
-
-              return (
-                <div
-                  key={pred.id}
-                  className={`flex items-center justify-between rounded-xl p-4 border shadow-sm ${
-                    isExact ? 'border-pink-900/50 bg-pink-950/20' : 'border-zinc-800 bg-zinc-900'
-                  }`}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-1.5">
-                        {home.logoUrl ? <img src={home.logoUrl} className="size-5 rounded-full bg-zinc-800 border border-zinc-900" /> : <div className="size-5 rounded-full bg-zinc-800 border border-zinc-900" />}
-                        {away.logoUrl ? <img src={away.logoUrl} className="size-5 rounded-full bg-zinc-800 border border-zinc-900" /> : <div className="size-5 rounded-full bg-zinc-800 border border-zinc-900" />}
-                      </div>
-                      <p className="text-xs font-bold text-white">
-                        {home.shortName} <span className="text-zinc-500 font-normal">vs</span> {away.shortName}
-                      </p>
-                    </div>
-                    
-                    <div className="mt-2 flex gap-4">
-                      <p className="text-[10px] font-medium text-zinc-400">
-                        Prono <span className="font-bold text-white">{pred.predicted_home_score}–{pred.predicted_away_score}</span>
-                      </p>
-                      {isFinished && (
-                        <p className="text-[10px] font-medium text-zinc-400">
-                          Réel <span className="font-bold text-white">{m.home_score}–{m.away_score}</span>
-                        </p>
-                      )}
-                    </div>
-                    {isExact && (
-                      <p className="mt-1.5 text-[9px] font-black uppercase tracking-widest text-pink-500">Score exact</p>
-                    )}
+          {/* Avatar + Name + Streak */}
+          <div className="flex flex-col items-center mt-2 mb-5">
+            <div className="relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+              <input 
+                type="file" ref={fileInputRef} hidden accept="image/*" 
+                onChange={handleFileSelect} disabled={isUploadingAvatar}
+              />
+              {/* Outer ring */}
+              <div className={`p-1 rounded-full bg-gradient-to-b shadow-[0_0_20px_rgba(234,88,12,0.15)] ${isHot ? 'from-orange-500/80 to-orange-500/20 shadow-[0_0_25px_rgba(234,88,12,0.4)]' : isCold ? 'from-blue-500/50 to-blue-500/10 shadow-[0_0_25px_rgba(59,130,246,0.2)]' : 'from-orange-500/50 to-orange-500/10'}`}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={username} className={`size-24 rounded-full object-cover border-4 border-[#161B26] ${isUploadingAvatar ? 'opacity-50' : ''}`} />
+                ) : (
+                  <div className={`flex size-24 items-center justify-center rounded-full bg-zinc-900 border-4 border-[#161B26] text-3xl font-black text-white ${isUploadingAvatar ? 'opacity-50' : ''}`}>
+                    {username[0]?.toUpperCase()}
                   </div>
+                )}
+              </div>
+              
+              {isUploadingAvatar ? (
+                <div className="absolute inset-0 flex items-center justify-center rounded-full">
+                  <Loader2 className="size-5 text-white animate-spin" />
+                </div>
+              ) : (
+                <div className="hide-on-share absolute bottom-1 right-1 flex size-7 items-center justify-center rounded-full bg-zinc-800 border-2 border-[#161B26] shadow-lg hover:bg-zinc-700 transition-colors">
+                  <Camera className="size-3.5 text-zinc-400" />
+                </div>
+              )}
 
-                  <div className="flex flex-col items-end">
+              {/* Streak Badge */}
+              {isHot && (
+                <div className="absolute -left-2 -top-2 flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-600 border-2 border-[#161B26] shadow-lg animate-bounce">
+                  <Flame className="size-4 text-white" />
+                </div>
+              )}
+              {isCold && (
+                <div className="absolute -left-2 -top-2 flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-cyan-600 border-2 border-[#161B26] shadow-lg">
+                  <Snowflake className="size-4 text-white" />
+                </div>
+              )}
+            </div>
+
+            <h1 className="mt-4 text-2xl font-black text-white flex items-center gap-2">
+              {username}
+            </h1>
+            
+            {/* Rank Progress Bar */}
+            <div className="mt-3 w-full max-w-[200px]">
+              <div className="flex justify-between text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">
+                <span>{pts} pts</span>
+                <span>{ptsToNext > 0 ? `${ptsToNext} pts to ${pts >= 100 ? 'All-Star' : pts >= 30 ? 'Starter' : pts >= 10 ? '6th Man' : 'Bench'}` : 'Max Rank'}</span>
+              </div>
+              <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-1000"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Stats grid on the card */}
+          <div className="grid grid-cols-4 gap-2 pt-5 border-t border-white/5">
+            <div className="flex flex-col items-center">
+              <p className="text-xl font-black tabular-nums text-white">{stats.totalPoints}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Points</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <p className="text-xl font-black tabular-nums text-white">{stats.exactScores}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Exacts</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <p className="text-xl font-black tabular-nums text-white">{stats.successRate}<span className="text-xs text-zinc-500">%</span></p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Réussite</p>
+            </div>
+            <div className="flex flex-col items-center">
+              <p className="text-xl font-black tabular-nums text-white">{stats.totalPredictions}</p>
+              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Pronos</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <main className="flex flex-1 flex-col gap-5 px-5 mt-5">
+
+        {/* ─── NAVIGATION ─── */}
+        <section className="rounded-2xl bg-[#161B26] overflow-hidden">
+          <Link href="/ligue" className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60 active:bg-zinc-800/30">
+            <span className="text-sm font-semibold text-white">Ma ligue</span>
+            <ChevronRight className="size-4 text-zinc-600" />
+          </Link>
+          <Link href="/classement" className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60 active:bg-zinc-800/30">
+            <span className="text-sm font-semibold text-white">Classement</span>
+            <ChevronRight className="size-4 text-zinc-600" />
+          </Link>
+          <Link href="/pronos" className="flex items-center justify-between px-5 py-4 active:bg-zinc-800/30">
+            <span className="text-sm font-semibold text-white">Mes pronostics</span>
+            <ChevronRight className="size-4 text-zinc-600" />
+          </Link>
+        </section>
+
+        {/* ─── LAST PREDICTIONS ─── */}
+        {predictions.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3 px-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Historique récent</p>
+              <Link href="/pronos" className="text-[10px] font-bold uppercase tracking-widest text-orange-500 flex items-center gap-1">
+                Tout voir <ChevronRight className="size-3" />
+              </Link>
+            </div>
+
+            <div className="rounded-2xl bg-[#161B26] overflow-hidden">
+              {predictions.slice(0, 6).map((pred, i) => {
+                const m = pred.matches
+                const isExact = pred.points_earned === 10
+                const isWon = (pred.points_earned ?? 0) > 0
+                const isFinished = m.status === 'finished'
+                const home = findTeam(m.home_team)
+                const away = findTeam(m.away_team)
+
+                return (
+                  <div
+                    key={pred.id}
+                    className={`flex items-center justify-between px-5 py-3.5 ${i < Math.min(predictions.length, 6) - 1 ? 'border-b border-zinc-800/60' : ''}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex -space-x-1.5">
+                        {home.logoUrl ? (
+                          <img src={home.logoUrl} className="size-7 rounded-full bg-zinc-900 p-0.5 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                        ) : (
+                          <div className="size-7 rounded-full" style={{ backgroundColor: home.colors.primary }} />
+                        )}
+                        {away.logoUrl ? (
+                          <img src={away.logoUrl} className="size-7 rounded-full bg-zinc-900 p-0.5 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                        ) : (
+                          <div className="size-7 rounded-full" style={{ backgroundColor: away.colors.primary }} />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">
+                          {home.shortName} <span className="text-zinc-600 text-xs">-</span> {away.shortName}
+                        </p>
+                        <p className="text-[10px] text-zinc-500 mt-0.5">
+                          {pred.predicted_home_score}–{pred.predicted_away_score}
+                          {isFinished && <span className="text-zinc-600"> → {m.home_score}–{m.away_score}</span>}
+                          {isExact && <span className="text-orange-500 font-bold ml-1">· exact</span>}
+                        </p>
+                      </div>
+                    </div>
+
                     {isFinished ? (
-                      <span className={`text-xl font-bold tabular-nums leading-none ${isWon ? 'text-green-500' : 'text-zinc-600'}`}>
+                      <span className={`text-sm font-black tabular-nums ${isWon ? 'text-green-500' : 'text-zinc-600'}`}>
                         {isWon ? `+${pred.points_earned}` : '0'}
                       </span>
                     ) : (
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-orange-500">
-                        En attente
-                      </span>
+                      <span className="text-[10px] font-semibold text-zinc-500 italic">en attente</span>
                     )}
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        </motion.section>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
-        {/* Quick Links */}
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="flex gap-3"
+        {predictions.length === 0 && (
+          <section className="rounded-2xl bg-[#161B26] p-8 text-center">
+            <p className="text-sm text-zinc-500">Aucun pronostic pour le moment.</p>
+            <Link href="/pronos" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-orange-500">
+              Pronostiquer <ArrowRight className="size-3.5" />
+            </Link>
+          </section>
+        )}
+
+        {/* ─── SIGN OUT ─── */}
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="flex items-center justify-center gap-2 py-4 text-sm text-red-400 active:text-red-300"
         >
-          <Link
-            href="/ligue"
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 border border-zinc-800 py-4 text-[10px] font-bold uppercase tracking-widest text-zinc-300 transition-colors hover:bg-zinc-800 shadow-sm"
-          >
-            Ligue
-            <ArrowRight className="size-3 text-zinc-500" />
-          </Link>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-950/20 border border-red-900/50 py-4 text-[10px] font-bold uppercase tracking-widest text-red-500 transition-colors hover:bg-red-900/30 shadow-sm"
-          >
-            <LogOut className="size-3" />
-            Déconnexion
-          </button>
-        </motion.section>
+          <LogOut className="size-4" />
+          Se déconnecter
+        </button>
       </main>
 
       <BottomNav />

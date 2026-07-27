@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { BottomNav } from '@/components/bottom-nav'
 import { useUser } from '@/components/user-provider'
 import { getUpcomingMatches, getFinishedMatches } from '@/lib/api/matches'
 import { getUserStats, getLeaderboard, type LeaderboardEntry } from '@/lib/leaderboard'
 import { findTeam } from '@/lib/teams'
-import { ArrowRight, Trophy, ChevronRight } from 'lucide-react'
+import { ArrowRight, Trophy, ChevronRight, Flame } from 'lucide-react'
 import { LeagueSwitcher } from '@/components/league-switcher'
 import { AnimatedCounter } from '@/components/animated-counter'
 
@@ -23,6 +23,8 @@ interface Match {
   status: string
 }
 
+const LEAGUE_FILTERS = ['Tous', 'WNBA', 'NBA', 'EuroLeague', 'Betclic Élite'] as const
+
 export default function AccueilPage() {
   const { user, profile, leagueId, loading: authLoading } = useUser()
   const [upcoming, setUpcoming] = useState<Match[]>([])
@@ -30,6 +32,7 @@ export default function AccueilPage() {
   const [stats, setStats] = useState({ totalPoints: 0, exactScores: 0, totalPredictions: 0, successRate: 0 })
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeFilter, setActiveFilter] = useState<string>('Tous')
 
   useEffect(() => {
     if (authLoading || !user) return
@@ -55,6 +58,25 @@ export default function AccueilPage() {
     load()
   }, [user, authLoading, leagueId])
 
+  // Filter matches by league
+  const filteredUpcoming = useMemo(() => {
+    if (activeFilter === 'Tous') return upcoming
+    return upcoming.filter(m => {
+      const ln = m.league_name?.toLowerCase() || ''
+      const filter = activeFilter.toLowerCase()
+      return ln.includes(filter) || filter.includes(ln)
+    })
+  }, [upcoming, activeFilter])
+
+  const filteredFinished = useMemo(() => {
+    if (activeFilter === 'Tous') return finished
+    return finished.filter(m => {
+      const ln = m.league_name?.toLowerCase() || ''
+      const filter = activeFilter.toLowerCase()
+      return ln.includes(filter) || filter.includes(ln)
+    })
+  }, [finished, activeFilter])
+
   const userRank = leaderboard.find((e) => e.userId === user?.id)?.rank ?? '—'
 
   function formatDate(iso: string) {
@@ -78,29 +100,37 @@ export default function AccueilPage() {
     return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
   }
 
-  // Loading skeleton
+  // ─── LOADING SKELETON ───
   if (authLoading || loading) {
     return (
-      <div className="mx-auto flex min-h-svh max-w-md flex-col bg-[#0B0E14] pb-24">
-        <header className="flex items-center justify-between px-6 pt-14 pb-6">
+      <div className="mx-auto flex min-h-svh max-w-md flex-col pb-24">
+        <header className="flex items-center justify-between px-5 pt-14 pb-4">
           <div>
-            <div className="h-4 w-20 rounded bg-zinc-800 animate-pulse mb-2" />
+            <div className="h-3 w-16 rounded-full bg-white/5 animate-pulse mb-2" />
             <h1 className="text-3xl font-black tracking-tighter text-white">
               Euro<span className="text-orange-500">Step</span>
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="h-8 w-16 rounded-lg bg-zinc-800 animate-pulse" />
-            <div className="size-10 rounded-full bg-zinc-800 animate-pulse" />
+            <div className="h-9 w-20 rounded-full bg-white/5 animate-pulse" />
+            <div className="size-10 rounded-full bg-white/5 animate-pulse" />
           </div>
         </header>
-        <main className="flex flex-1 flex-col gap-6 px-6">
-          <div className="h-64 w-full rounded-xl bg-[#161B26] border border-white/5 animate-pulse" />
-          <div className="h-6 w-24 rounded bg-zinc-800 animate-pulse" />
+        <main className="flex flex-1 flex-col gap-5 px-5">
+          {/* Filter pills skeleton */}
+          <div className="flex gap-2">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="h-9 w-20 rounded-full bg-white/5 animate-pulse" />
+            ))}
+          </div>
+          {/* Hero card skeleton */}
+          <div className="h-[340px] w-full rounded-2xl bg-[#161B26] border border-white/5 animate-pulse" />
+          {/* Upcoming skeleton */}
+          <div className="h-5 w-20 rounded bg-white/5 animate-pulse" />
           <div className="flex gap-3">
-            <div className="h-28 w-36 shrink-0 rounded-xl bg-[#161B26] border border-white/5 animate-pulse" />
-            <div className="h-28 w-36 shrink-0 rounded-xl bg-[#161B26] border border-white/5 animate-pulse" />
-            <div className="h-28 w-36 shrink-0 rounded-xl bg-[#161B26] border border-white/5 animate-pulse" />
+            {[1,2,3].map(i => (
+              <div key={i} className="h-[200px] w-[160px] shrink-0 rounded-2xl bg-[#161B26] border border-white/5 animate-pulse" />
+            ))}
           </div>
         </main>
         <BottomNav />
@@ -109,14 +139,14 @@ export default function AccueilPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-md flex-col bg-[#0B0E14] pb-28 text-zinc-100">
+    <div className="mx-auto flex min-h-svh max-w-md flex-col pb-28 text-zinc-100">
 
-      {/* ─── HEADER: Logo + Stats + Avatar ─── */}
+      {/* ─── HEADER ─── */}
       <motion.header
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 flex items-center justify-between px-6 pt-14 pb-4 backdrop-blur-md bg-[#0B0E14]/80"
+        className="sticky top-0 z-50 flex items-center justify-between px-5 pt-14 pb-3 backdrop-blur-xl bg-[#0B0E14]/80"
       >
         <div>
           <LeagueSwitcher />
@@ -126,24 +156,24 @@ export default function AccueilPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Compact stats pills */}
-          <div className="flex items-center gap-1.5 rounded-lg bg-[#161B26] border border-white/5 px-2.5 py-1.5">
-            <span className="text-lg font-black tabular-nums text-orange-500">
+          {/* Stats pill */}
+          <div className="flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-3 py-2">
+            <span className="text-sm font-black tabular-nums text-orange-500">
               #{typeof userRank === 'number' ? userRank : '—'}
             </span>
-            <div className="h-4 w-px bg-zinc-700" />
+            <div className="h-3.5 w-px bg-white/10" />
             <span className="text-sm font-bold tabular-nums text-white">
               <AnimatedCounter value={stats.totalPoints} className="text-sm font-bold tabular-nums" />
             </span>
-            <span className="text-[10px] text-zinc-500 font-semibold">pts</span>
+            <span className="text-[9px] text-zinc-500 font-semibold">pts</span>
           </div>
 
           {/* Avatar */}
-          <Link href="/profil" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
+          <Link href="/profil" className="shrink-0 transition-transform active:scale-95">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profil" className="size-10 rounded-full object-cover border-2 border-[#0B0E14] shadow-lg" />
+              <img src={profile.avatar_url} alt="Profil" className="size-10 rounded-full object-cover ring-2 ring-orange-500/30 shadow-lg" />
             ) : (
-              <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-b from-orange-500 to-orange-600 text-sm font-bold text-white border-2 border-[#0B0E14] shadow-lg">
+              <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-b from-orange-500 to-orange-600 text-sm font-bold text-white ring-2 ring-orange-500/30 shadow-lg">
                 {(profile?.username || 'J')[0]?.toUpperCase()}
               </div>
             )}
@@ -151,7 +181,29 @@ export default function AccueilPage() {
         </div>
       </motion.header>
 
-      <main className="flex flex-1 flex-col gap-8 px-5">
+      <main className="flex flex-1 flex-col gap-6 px-5">
+
+        {/* ─── FILTER TABS ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1"
+        >
+          {LEAGUE_FILTERS.map(filter => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 ${
+                activeFilter === filter
+                  ? 'bg-white text-black shadow-lg'
+                  : 'bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </motion.div>
 
         {/* ─── NO LEAGUE CTA ─── */}
         {!leagueId && (
@@ -159,7 +211,7 @@ export default function AccueilPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-5 text-center"
+            className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-5 text-center"
           >
             <p className="text-[11px] font-bold uppercase tracking-widest text-orange-400">Tu n'es dans aucune ligue</p>
             <Link
@@ -171,9 +223,9 @@ export default function AccueilPage() {
           </motion.section>
         )}
 
-        {/* ─── HERO MATCH (The Centerpiece) ─── */}
-        {upcoming.length > 0 && (() => {
-          const m = upcoming[0]
+        {/* ─── HERO MATCH CARD (Full-Bleed Betclic Style) ─── */}
+        {filteredUpcoming.length > 0 && (() => {
+          const m = filteredUpcoming[0]
           const home = findTeam(m.home_team)
           const away = findTeam(m.away_team)
           return (
@@ -181,14 +233,22 @@ export default function AccueilPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.15 }}
-              className="relative overflow-hidden rounded-xl bg-[#161B26] border border-white/5 shadow-2xl"
+              className="relative h-[340px] overflow-hidden rounded-2xl shadow-2xl"
             >
-              {/* Background faded logos */}
+              {/* Background: team colors gradient */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `linear-gradient(135deg, ${home.colors.primary}40 0%, ${away.colors.primary}40 100%)`,
+                }}
+              />
+
+              {/* Faded team logos as background texture */}
               {home.logoUrl && (
                 <img
                   src={home.logoUrl}
                   alt=""
-                  className="absolute -left-8 top-1/2 -translate-y-1/2 h-48 opacity-[0.06] select-none pointer-events-none"
+                  className="absolute -left-6 top-4 h-44 opacity-[0.12] blur-[1px] select-none pointer-events-none"
                   onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
               )}
@@ -196,78 +256,101 @@ export default function AccueilPage() {
                 <img
                   src={away.logoUrl}
                   alt=""
-                  className="absolute -right-8 top-1/2 -translate-y-1/2 h-48 opacity-[0.06] select-none pointer-events-none"
+                  className="absolute -right-6 top-4 h-44 opacity-[0.12] blur-[1px] select-none pointer-events-none"
                   onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
               )}
 
+              {/* Heavy gradient overlay from bottom */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0B0E14] via-[#0B0E14]/90 to-transparent" />
+
               {/* Content */}
-              <div className="relative p-6">
-                {/* Top label */}
-                <div className="flex items-center justify-between mb-8">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                    {m.league_name}
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500">
+              <div className="relative flex flex-col justify-between h-full p-5">
+                {/* Top: league & time */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur-md px-3 py-1 border border-white/10">
+                      <Flame className="size-3 text-orange-400" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">
+                        {m.league_name}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">
                     {formatDate(m.scheduled_at)}
                   </span>
                 </div>
 
-                {/* Teams face-off */}
-                <div className="flex items-center justify-between">
+                {/* Center: Teams face-off */}
+                <div className="flex items-center justify-between px-2">
                   {/* Home */}
                   <div className="flex flex-col items-center w-2/5">
                     <div className="relative size-20 flex items-center justify-center">
                       {home.logoUrl ? (
-                        <img src={home.logoUrl} className="size-16 object-contain" alt={home.shortName} onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                        <img src={home.logoUrl} className="size-16 object-contain drop-shadow-2xl" alt={home.shortName} onError={(e) => { e.currentTarget.style.display = 'none' }} />
                       ) : (
-                        <div className="flex size-16 items-center justify-center rounded-full bg-zinc-800 text-2xl font-black text-white">
+                        <div
+                          className="flex size-16 items-center justify-center rounded-full text-2xl font-black text-white shadow-xl"
+                          style={{ backgroundColor: home.colors.primary }}
+                        >
                           {home.shortName[0]}
                         </div>
                       )}
                     </div>
-                    <h3 className="mt-3 text-lg font-black italic uppercase tracking-tighter text-white text-center leading-tight">
+                    <h3 className="mt-2 text-base font-black italic uppercase tracking-tight text-white text-center leading-tight">
                       {home.shortName}
                     </h3>
                   </div>
 
                   {/* VS */}
                   <div className="flex flex-col items-center">
-                    <span className="text-2xl font-black italic text-zinc-600 drop-shadow">VS</span>
+                    <span className="text-2xl font-black italic text-white/20">VS</span>
                   </div>
 
                   {/* Away */}
                   <div className="flex flex-col items-center w-2/5">
                     <div className="relative size-20 flex items-center justify-center">
                       {away.logoUrl ? (
-                        <img src={away.logoUrl} className="size-16 object-contain" alt={away.shortName} onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                        <img src={away.logoUrl} className="size-16 object-contain drop-shadow-2xl" alt={away.shortName} onError={(e) => { e.currentTarget.style.display = 'none' }} />
                       ) : (
-                        <div className="flex size-16 items-center justify-center rounded-full bg-zinc-800 text-2xl font-black text-white">
+                        <div
+                          className="flex size-16 items-center justify-center rounded-full text-2xl font-black text-white shadow-xl"
+                          style={{ backgroundColor: away.colors.primary }}
+                        >
                           {away.shortName[0]}
                         </div>
                       )}
                     </div>
-                    <h3 className="mt-3 text-lg font-black italic uppercase tracking-tighter text-white text-center leading-tight">
+                    <h3 className="mt-2 text-base font-black italic uppercase tracking-tight text-white text-center leading-tight">
                       {away.shortName}
                     </h3>
                   </div>
                 </div>
 
-                {/* CTA */}
-                <Link
-                  href="/pronos"
-                  className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-orange-500 to-orange-600 border border-orange-700 py-3.5 font-display text-sm font-bold uppercase tracking-widest text-white shadow-[inset_0px_1px_0px_rgba(255,255,255,0.2)] transition-all active:scale-95 hover:from-orange-400 hover:to-orange-500"
-                >
-                  Pronostiquer le choc
-                  <ArrowRight className="size-4" />
-                </Link>
+                {/* Bottom: Two massive CTA buttons side-by-side */}
+                <div className="flex gap-2.5">
+                  <Link
+                    href="/pronos"
+                    className="flex-1 flex flex-col items-center gap-1 rounded-xl bg-gradient-to-b from-orange-500 to-orange-600 border border-orange-700 py-3 shadow-[inset_0px_1px_0px_rgba(255,255,255,0.2)] transition-all active:scale-95 hover:from-orange-400 hover:to-orange-500"
+                  >
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/70">{home.shortName}</span>
+                    <span className="text-sm font-black uppercase tracking-wider text-white">Pronostiquer</span>
+                  </Link>
+                  <Link
+                    href="/pronos"
+                    className="flex-1 flex flex-col items-center gap-1 rounded-xl bg-gradient-to-b from-orange-500 to-orange-600 border border-orange-700 py-3 shadow-[inset_0px_1px_0px_rgba(255,255,255,0.2)] transition-all active:scale-95 hover:from-orange-400 hover:to-orange-500"
+                  >
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/70">{away.shortName}</span>
+                    <span className="text-sm font-black uppercase tracking-wider text-white">Pronostiquer</span>
+                  </Link>
+                </div>
               </div>
             </motion.section>
           )
         })()}
 
-        {/* ─── UPCOMING MATCHES (Horizontal Scroll) ─── */}
-        {upcoming.length > 1 && (
+        {/* ─── UPCOMING MATCHES (Immersive cards) ─── */}
+        {filteredUpcoming.length > 1 && (
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -281,35 +364,64 @@ export default function AccueilPage() {
             </div>
 
             <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide -mx-1 px-1">
-              {upcoming.slice(1, 6).map((m) => {
+              {filteredUpcoming.slice(1, 6).map((m) => {
                 const home = findTeam(m.home_team)
                 const away = findTeam(m.away_team)
                 return (
                   <Link
                     key={m.id}
                     href="/pronos"
-                    className="group flex-none w-[150px] snap-start rounded-xl bg-[#161B26] border border-white/5 p-4 transition-colors hover:border-zinc-700"
+                    className="group relative flex-none w-[160px] h-[200px] snap-start rounded-2xl overflow-hidden transition-transform active:scale-95"
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex -space-x-2">
-                        {home.logoUrl ? (
-                          <img src={home.logoUrl} className="size-7 rounded-full bg-zinc-800 border border-[#161B26] p-0.5 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                        ) : (
-                          <div className="size-7 rounded-full bg-zinc-800 border border-[#161B26] flex items-center justify-center text-[10px] font-bold text-white">{home.shortName[0]}</div>
-                        )}
-                        {away.logoUrl ? (
-                          <img src={away.logoUrl} className="size-7 rounded-full bg-zinc-800 border border-[#161B26] p-0.5 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                        ) : (
-                          <div className="size-7 rounded-full bg-zinc-800 border border-[#161B26] flex items-center justify-center text-[10px] font-bold text-white">{away.shortName[0]}</div>
-                        )}
+                    {/* Background gradient from team colors */}
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: `linear-gradient(160deg, ${home.colors.primary}30 0%, ${away.colors.primary}30 100%)`,
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B0E14] via-[#0B0E14]/80 to-transparent" />
+
+                    {/* Faded team logos */}
+                    {home.logoUrl && (
+                      <img src={home.logoUrl} className="absolute -left-3 top-2 h-20 opacity-[0.1] select-none pointer-events-none" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                    )}
+                    {away.logoUrl && (
+                      <img src={away.logoUrl} className="absolute -right-3 top-2 h-20 opacity-[0.1] select-none pointer-events-none" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                    )}
+
+                    {/* Content */}
+                    <div className="relative flex flex-col justify-between h-full p-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-white/10 backdrop-blur-md px-2 py-0.5 text-[8px] font-bold uppercase tracking-widest text-white/60 border border-white/10">
+                          {m.league_name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-center gap-2 -space-x-1">
+                        <div className="flex -space-x-3">
+                          {home.logoUrl ? (
+                            <img src={home.logoUrl} className="size-10 rounded-full bg-black/50 border-2 border-[#0B0E14] p-1 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                          ) : (
+                            <div className="size-10 rounded-full border-2 border-[#0B0E14] flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: home.colors.primary }}>{home.shortName[0]}</div>
+                          )}
+                          {away.logoUrl ? (
+                            <img src={away.logoUrl} className="size-10 rounded-full bg-black/50 border-2 border-[#0B0E14] p-1 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                          ) : (
+                            <div className="size-10 rounded-full border-2 border-[#0B0E14] flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: away.colors.primary }}>{away.shortName[0]}</div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-bold text-white leading-tight text-center">
+                          {home.shortName} <span className="text-white/30 font-normal">vs</span> {away.shortName}
+                        </p>
+                        <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-orange-400 text-center">
+                          {formatTime(m.scheduled_at)}
+                        </p>
                       </div>
                     </div>
-                    <p className="text-xs font-bold text-white leading-tight">
-                      {home.shortName} <span className="text-zinc-500 font-normal">vs</span> {away.shortName}
-                    </p>
-                    <p className="mt-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-400">
-                      {formatTime(m.scheduled_at)}
-                    </p>
                   </Link>
                 )
               })}
@@ -317,8 +429,8 @@ export default function AccueilPage() {
           </motion.section>
         )}
 
-        {/* ─── RECENT RESULTS (Dense list, no boxes) ─── */}
-        {finished.length > 0 && (
+        {/* ─── RECENT RESULTS ─── */}
+        {filteredFinished.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -327,8 +439,8 @@ export default function AccueilPage() {
             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-3 px-1">
               Derniers résultats
             </p>
-            <div className="flex flex-col">
-              {finished.map((m, i) => {
+            <div className="rounded-2xl bg-[#161B26]/50 border border-white/5 overflow-hidden backdrop-blur-sm">
+              {filteredFinished.map((m, i) => {
                 const home = findTeam(m.home_team)
                 const away = findTeam(m.away_team)
                 const homeWon = (m.home_score ?? 0) > (m.away_score ?? 0)
@@ -337,19 +449,19 @@ export default function AccueilPage() {
                 return (
                   <div
                     key={m.id}
-                    className={`flex items-center justify-between py-3.5 px-1 ${i < finished.length - 1 ? 'border-b border-white/5' : ''}`}
+                    className={`flex items-center justify-between py-3.5 px-4 transition-colors hover:bg-white/[0.02] ${i < filteredFinished.length - 1 ? 'border-b border-white/5' : ''}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex -space-x-1.5">
                         {home.logoUrl ? (
-                          <img src={home.logoUrl} className="size-7 rounded-full bg-zinc-900 border border-[#0B0E14] p-0.5 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                          <img src={home.logoUrl} className="size-7 rounded-full bg-black/30 border border-[#0B0E14] p-0.5 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                         ) : (
-                          <div className="size-7 rounded-full bg-zinc-800" />
+                          <div className="size-7 rounded-full" style={{ backgroundColor: home.colors.primary }} />
                         )}
                         {away.logoUrl ? (
-                          <img src={away.logoUrl} className="size-7 rounded-full bg-zinc-900 border border-[#0B0E14] p-0.5 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                          <img src={away.logoUrl} className="size-7 rounded-full bg-black/30 border border-[#0B0E14] p-0.5 object-contain" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />
                         ) : (
-                          <div className="size-7 rounded-full bg-zinc-800" />
+                          <div className="size-7 rounded-full" style={{ backgroundColor: away.colors.primary }} />
                         )}
                       </div>
                       <div>
@@ -388,7 +500,7 @@ export default function AccueilPage() {
               </Link>
             </div>
 
-            <div className="rounded-xl bg-[#161B26] border border-white/5 overflow-hidden">
+            <div className="rounded-2xl bg-[#161B26]/50 border border-white/5 overflow-hidden backdrop-blur-sm">
               {leaderboard.map((entry, index) => {
                 const isUser = entry.userId === user?.id
                 const isFirst = index === 0
@@ -428,7 +540,7 @@ export default function AccueilPage() {
           <motion.section
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="rounded-xl border border-white/5 bg-[#161B26] p-8 text-center"
+            className="rounded-2xl border border-white/5 bg-[#161B26]/50 p-8 text-center backdrop-blur-sm"
           >
             <p className="text-sm text-zinc-400 font-medium">
               Aucun match pour le moment. Synchronise les matchs depuis les paramètres.

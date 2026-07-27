@@ -101,7 +101,7 @@ export default function PronosPage() {
 
   if (!user) {
     return (
-      <div className="mx-auto flex min-h-svh max-w-md items-center justify-center bg-[#0B0E14] px-6">
+      <div className="mx-auto flex min-h-svh max-w-md items-center justify-center px-6">
         <p className="text-center text-sm text-zinc-400">
           Connecte-toi pour faire tes pronostics.
         </p>
@@ -110,7 +110,7 @@ export default function PronosPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-md flex-col bg-[#0B0E14] text-zinc-100">
+    <div className="mx-auto flex min-h-svh max-w-md flex-col text-zinc-100">
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

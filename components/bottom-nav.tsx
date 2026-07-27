@@ -11,8 +11,8 @@ function AnimatedHome({ active, className }: { active: boolean, className?: stri
   return (
     <motion.svg key={active ? 'active' : 'inactive'} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}
       initial={{ y: 0, scale: active ? 0.8 : 1 }}
-      animate={{ y: active ? [0, -4, 0] : 0, scale: 1 }}
-      transition={{ duration: 0.4, type: "spring", bounce: 0.4 }}
+      animate={{ y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 400, damping: 12 }}
     >
       <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
       <polyline points="9 22 9 12 15 12 15 22"/>
@@ -46,8 +46,8 @@ function AnimatedMessage({ active, className }: { active: boolean, className?: s
     <svg key={active ? 'active' : 'inactive'} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}>
       <motion.path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" 
         initial={{ scale: active ? 0.8 : 1, rotate: 0 }} 
-        animate={{ scale: 1, rotate: active ? [0, -15, 15, -10, 10, 0] : 0 }} 
-        transition={{ duration: 0.5 }} 
+        animate={{ scale: 1, rotate: 0 }} 
+        transition={{ type: "spring", stiffness: 400, damping: 10 }} 
         style={{ transformOrigin: '12px 12px' }} 
       />
     </svg>
@@ -147,7 +147,7 @@ export function BottomNav() {
       aria-label="Navigation principale"
       className="fixed inset-x-0 bottom-6 z-50 px-4 pb-[env(safe-area-inset-bottom)] pointer-events-none"
     >
-      <div className="mx-auto max-w-[340px] pointer-events-auto rounded-xl bg-[#161B26]/70 backdrop-blur-md shadow-2xl border border-white/10">
+      <div className="mx-auto max-w-[340px] pointer-events-auto rounded-full bg-[#161B26]/90 backdrop-blur-xl shadow-2xl border border-white/10">
         <ul className="relative flex items-center justify-around px-1 py-1">
           {tabs.map(({ label, icon: Icon, href, color, bgColor, borderColor }) => {
             const active = isActive(href)
@@ -160,7 +160,7 @@ export function BottomNav() {
                 {active && (
                   <motion.div
                     layoutId="active-tab-bubble"
-                    className={`absolute inset-0 ${bgColor} ${borderColor} border rounded-lg`}
+                    className={`absolute inset-0 ${bgColor} ${borderColor} border rounded-full`}
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}

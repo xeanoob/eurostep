@@ -152,7 +152,7 @@ export function MatchHeroCard({
           <img 
             src={home.logoUrl} 
             alt="" 
-            className="absolute -left-10 top-0 h-full opacity-10 mix-blend-screen object-cover select-none"
+            className="absolute -left-10 top-0 h-full opacity-10 object-cover select-none pointer-events-none"
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         )}
@@ -160,7 +160,7 @@ export function MatchHeroCard({
           <img 
             src={away.logoUrl} 
             alt="" 
-            className="absolute -right-10 top-0 h-full opacity-10 mix-blend-screen object-cover select-none"
+            className="absolute -right-10 top-0 h-full opacity-10 object-cover select-none pointer-events-none"
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         )}
@@ -188,10 +188,11 @@ export function MatchHeroCard({
         )}
 
         {/* Center Info */}
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#161B26] to-transparent z-10 pointer-events-none" />
         <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
           {matchStatus === 'live' ? (
             <div className="flex flex-col items-center mt-6">
-              <span className="flex items-center gap-1.5 text-xs font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+              <span className="flex items-center gap-1.5 text-xs font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 animate-pulse">
                 <span className="size-2 rounded-full bg-red-500" /> LIVE
               </span>
               <div className="flex items-center gap-3 mt-2 font-display text-4xl font-black text-white">

@@ -188,7 +188,7 @@ export default function AccueilPage() {
                 <img
                   src={home.logoUrl}
                   alt=""
-                  className="absolute -left-8 top-1/2 -translate-y-1/2 h-48 opacity-[0.06] mix-blend-screen select-none pointer-events-none"
+                  className="absolute -left-8 top-1/2 -translate-y-1/2 h-48 opacity-[0.06] select-none pointer-events-none"
                   onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
               )}
@@ -196,7 +196,7 @@ export default function AccueilPage() {
                 <img
                   src={away.logoUrl}
                   alt=""
-                  className="absolute -right-8 top-1/2 -translate-y-1/2 h-48 opacity-[0.06] mix-blend-screen select-none pointer-events-none"
+                  className="absolute -right-8 top-1/2 -translate-y-1/2 h-48 opacity-[0.06] select-none pointer-events-none"
                   onError={(e) => { e.currentTarget.style.display = 'none' }}
                 />
               )}
@@ -219,7 +219,7 @@ export default function AccueilPage() {
                   <div className="flex flex-col items-center w-2/5">
                     <div className="relative size-20 flex items-center justify-center">
                       {home.logoUrl ? (
-                        <img src={home.logoUrl} className="size-16 object-contain drop-shadow-lg" alt={home.shortName} onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                        <img src={home.logoUrl} className="size-16 object-contain" alt={home.shortName} onError={(e) => { e.currentTarget.style.display = 'none' }} />
                       ) : (
                         <div className="flex size-16 items-center justify-center rounded-full bg-zinc-800 text-2xl font-black text-white">
                           {home.shortName[0]}
@@ -240,7 +240,7 @@ export default function AccueilPage() {
                   <div className="flex flex-col items-center w-2/5">
                     <div className="relative size-20 flex items-center justify-center">
                       {away.logoUrl ? (
-                        <img src={away.logoUrl} className="size-16 object-contain drop-shadow-lg" alt={away.shortName} onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                        <img src={away.logoUrl} className="size-16 object-contain" alt={away.shortName} onError={(e) => { e.currentTarget.style.display = 'none' }} />
                       ) : (
                         <div className="flex size-16 items-center justify-center rounded-full bg-zinc-800 text-2xl font-black text-white">
                           {away.shortName[0]}

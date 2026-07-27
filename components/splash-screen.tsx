@@ -44,21 +44,14 @@ export function SplashScreen() {
             transition={{ type: "spring", damping: 20, stiffness: 100, delay: 0.2 }}
             className="relative flex flex-col items-center justify-center"
           >
-            {/* The ball / Icon */}
+            {/* The Logo */}
             <motion.div
-              initial={{ y: -50, opacity: 0, rotate: -180 }}
-              animate={{ y: 0, opacity: 1, rotate: 0 }}
-              transition={{ type: "spring", damping: 15, stiffness: 200, delay: 0.4 }}
-              className="relative mb-6 flex size-24 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 shadow-[0_0_40px_rgba(249,115,22,0.4)]"
+              initial={{ scale: 0, opacity: 0, rotate: -10 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              transition={{ type: "spring", damping: 14, stiffness: 200, delay: 0.2 }}
+              className="relative mb-6 flex size-32 items-center justify-center rounded-[2rem] shadow-[0_0_60px_rgba(249,115,22,0.25)] overflow-hidden border border-white/5"
             >
-              <div className="absolute inset-0 rounded-full border-[3px] border-black/20 mix-blend-overlay" />
-              {/* Simple basketball lines approximation */}
-              <div className="absolute inset-0 rounded-full overflow-hidden">
-                 <div className="absolute top-1/2 left-0 right-0 h-px bg-black/30" />
-                 <div className="absolute left-1/2 top-0 bottom-0 w-px bg-black/30" />
-                 <div className="absolute -left-4 top-1/2 h-20 w-20 -translate-y-1/2 rounded-full border-r-[2px] border-black/30" />
-                 <div className="absolute -right-4 top-1/2 h-20 w-20 -translate-y-1/2 rounded-full border-l-[2px] border-black/30" />
-              </div>
+              <img src="/logo.png" alt="EuroStep Logo" className="size-full object-cover" />
             </motion.div>
 
             {/* Text Logo */}

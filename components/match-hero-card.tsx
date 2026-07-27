@@ -153,6 +153,7 @@ export function MatchHeroCard({
             src={home.logoUrl} 
             alt="" 
             className="absolute -left-10 top-0 h-full opacity-10 mix-blend-screen object-cover select-none"
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         )}
         {away.logoUrl && (
@@ -160,6 +161,7 @@ export function MatchHeroCard({
             src={away.logoUrl} 
             alt="" 
             className="absolute -right-10 top-0 h-full opacity-10 mix-blend-screen object-cover select-none"
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         )}
 
@@ -169,6 +171,7 @@ export function MatchHeroCard({
             src={home.starPlayer.imageUrl} 
             alt={home.starPlayer.name} 
             className="absolute bottom-0 left-2 h-40 object-contain z-10"
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
           <div className="absolute bottom-0 left-2 h-40 w-32 bg-slate-800/20 rounded-t-full z-10" />
@@ -178,6 +181,7 @@ export function MatchHeroCard({
             src={away.starPlayer.imageUrl} 
             alt={away.starPlayer.name} 
             className="absolute bottom-0 right-2 h-40 object-contain z-10 scale-x-[-1]"
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
           <div className="absolute bottom-0 right-2 h-40 w-32 bg-slate-800/20 rounded-t-full z-10" />

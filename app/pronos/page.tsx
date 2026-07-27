@@ -129,7 +129,12 @@ export default function PronosPage() {
           
           <Link href="/profil" className="shrink-0 rounded-full border-2 border-zinc-950 shadow-sm transition-transform hover:scale-105 active:scale-95">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profil" className="size-12 rounded-full object-cover" />
+              <img 
+                src={profile.avatar_url} 
+                alt="Profil" 
+                className="size-12 rounded-full object-cover" 
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
             ) : (
               <div className="flex size-12 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
                 {(profile?.username || 'J')[0]?.toUpperCase()}

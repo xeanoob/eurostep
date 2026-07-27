@@ -9,9 +9,9 @@ import { createClient } from '@/lib/supabase/client'
 
 function AnimatedHome({ active, className }: { active: boolean, className?: string }) {
   return (
-    <motion.svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}
-      initial={false}
-      animate={active ? { y: [0, -4, 0], scale: [0.9, 1.1, 1] } : { y: 0, scale: 1 }}
+    <motion.svg key={active ? 'active' : 'inactive'} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}
+      initial={{ y: 0, scale: active ? 0.8 : 1 }}
+      animate={{ y: active ? [0, -4, 0] : 0, scale: 1 }}
       transition={{ duration: 0.4, type: "spring", bounce: 0.4 }}
     >
       <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -22,31 +22,31 @@ function AnimatedHome({ active, className }: { active: boolean, className?: stri
 
 function AnimatedTarget({ active, className }: { active: boolean, className?: string }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg key={active ? 'active' : 'inactive'} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}>
       <circle cx="12" cy="12" r="10" />
-      <motion.circle cx="12" cy="12" r="6" initial={false} animate={active ? { scale: [0, 1.2, 1], opacity: [0, 1] } : { scale: 1, opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} style={{ transformOrigin: '12px 12px' }} />
-      <motion.circle cx="12" cy="12" r="2" initial={false} animate={active ? { scale: [0, 1.5, 1], opacity: [0, 1] } : { scale: 1, opacity: 1 }} transition={{ duration: 0.4, delay: 0.2 }} style={{ transformOrigin: '12px 12px' }} />
+      <motion.circle cx="12" cy="12" r="6" initial={{ scale: active ? 0 : 1, opacity: active ? 0 : 1 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }} style={{ transformOrigin: '12px 12px' }} />
+      <motion.circle cx="12" cy="12" r="2" initial={{ scale: active ? 0 : 1, opacity: active ? 0 : 1 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4, delay: 0.2 }} style={{ transformOrigin: '12px 12px' }} />
     </svg>
   )
 }
 
 function AnimatedBarChart({ active, className }: { active: boolean, className?: string }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg key={active ? 'active' : 'inactive'} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M3 3v18h18" />
-      <motion.path d="M8 17V14" initial={false} animate={active ? { pathLength: [0, 1] } : { pathLength: 1 }} transition={{ duration: 0.4, delay: 0.0 }} />
-      <motion.path d="M13 17V5" initial={false} animate={active ? { pathLength: [0, 1] } : { pathLength: 1 }} transition={{ duration: 0.4, delay: 0.1 }} />
-      <motion.path d="M18 17V9" initial={false} animate={active ? { pathLength: [0, 1] } : { pathLength: 1 }} transition={{ duration: 0.4, delay: 0.2 }} />
+      <motion.path d="M8 17V14" initial={{ pathLength: active ? 0 : 1 }} animate={{ pathLength: 1 }} transition={{ duration: 0.4, delay: 0.0 }} />
+      <motion.path d="M13 17V5" initial={{ pathLength: active ? 0 : 1 }} animate={{ pathLength: 1 }} transition={{ duration: 0.4, delay: 0.1 }} />
+      <motion.path d="M18 17V9" initial={{ pathLength: active ? 0 : 1 }} animate={{ pathLength: 1 }} transition={{ duration: 0.4, delay: 0.2 }} />
     </svg>
   )
 }
 
 function AnimatedMessage({ active, className }: { active: boolean, className?: string }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg key={active ? 'active' : 'inactive'} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={className}>
       <motion.path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" 
-        initial={false} 
-        animate={active ? { scale: [0.8, 1.1, 1], rotate: [0, -15, 15, -10, 10, 0] } : { scale: 1, rotate: 0 }} 
+        initial={{ scale: active ? 0.8 : 1, rotate: 0 }} 
+        animate={{ scale: 1, rotate: active ? [0, -15, 15, -10, 10, 0] : 0 }} 
         transition={{ duration: 0.5 }} 
         style={{ transformOrigin: '12px 12px' }} 
       />
@@ -59,33 +59,33 @@ const tabs = [
     label: 'Accueil', 
     icon: AnimatedHome, 
     href: '/',
-    color: 'text-blue-400',
-    bgColor: 'bg-blue-500/20',
-    borderColor: 'border-blue-500/30'
+    color: 'text-primary',
+    bgColor: 'bg-primary/20',
+    borderColor: 'border-primary/30'
   },
   { 
     label: 'Pronos', 
     icon: AnimatedTarget, 
     href: '/pronos',
-    color: 'text-emerald-400',
-    bgColor: 'bg-emerald-500/20',
-    borderColor: 'border-emerald-500/30'
+    color: 'text-primary',
+    bgColor: 'bg-primary/20',
+    borderColor: 'border-primary/30'
   },
   { 
     label: 'Classement', 
     icon: AnimatedBarChart, 
     href: '/classement',
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-500/20',
-    borderColor: 'border-amber-500/30'
+    color: 'text-primary',
+    bgColor: 'bg-primary/20',
+    borderColor: 'border-primary/30'
   },
   { 
     label: 'Vestiaire', 
     icon: AnimatedMessage, 
     href: '/vestiaire',
-    color: 'text-purple-400',
-    bgColor: 'bg-purple-500/20',
-    borderColor: 'border-purple-500/30',
+    color: 'text-primary',
+    bgColor: 'bg-primary/20',
+    borderColor: 'border-primary/30',
     badge: 3
   },
 ]

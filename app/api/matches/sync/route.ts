@@ -105,7 +105,7 @@ async function syncMatches() {
           leagueToSport[m.league_name] || 'basketball_euroleague'
         ))]
         
-        for (const sportKey of sportKeys) {
+        await Promise.all(sportKeys.map(async (sportKey) => {
           const scoresRes = await fetch(
             `https://api.the-odds-api.com/v4/sports/${sportKey}/scores/?apiKey=${ODDS_API_KEY}&daysFrom=3`
           )
@@ -126,16 +126,16 @@ async function syncMatches() {
               }
             }
           }
-        }
+        }))
         console.log(`Fetched real scores for ${scoresMap.size} completed matches`)
       } catch (e) {
         console.error('Failed to fetch scores:', e)
       }
 
       // Only resolve matches that have real scores
-      for (const m of matchesToFinish) {
+      await Promise.all(matchesToFinish.map(async (m) => {
         const realScore = scoresMap.get(m.external_id)
-        if (!realScore) continue // Skip — no real score yet
+        if (!realScore) return // Skip — no real score yet
 
         await supabase
           .from('matches')
@@ -148,7 +148,7 @@ async function syncMatches() {
 
         // Calculate points for all users who predicted this match
         await calculateMatchPoints(m.id, realScore.homeScore, realScore.awayScore, supabase)
-      }
+      }))
     }
 
     // 3. Upsert into database

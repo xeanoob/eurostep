@@ -124,7 +124,7 @@ export async function calculateMatchPoints(matchId: string, actualHomeScore: num
   const actualDiff = actualHomeScore - actualAwayScore
   const actualWinner = actualDiff > 0 ? 'home' : actualDiff < 0 ? 'away' : 'draw'
 
-  for (const pred of predictions) {
+  await Promise.all(predictions.map(async (pred) => {
     const predDiff = pred.predicted_home_score - pred.predicted_away_score
     const predWinner = predDiff > 0 ? 'home' : predDiff < 0 ? 'away' : 'draw'
     
@@ -166,7 +166,7 @@ export async function calculateMatchPoints(matchId: string, actualHomeScore: num
           .eq('id', pred.user_id)
       }
     }
-  }
+  }))
 }
 
 export async function getUserPrediction(userId: string, matchId: string) {
@@ -214,7 +214,7 @@ export async function scorePredictionsForMatch(matchId: string) {
   const awayOdds = match.away_odds ?? fallbackOdds.away
 
   // Calculate and update points for each prediction
-  for (const pred of predictions) {
+  await Promise.all(predictions.map(async (pred) => {
     let points = calculatePoints(
       pred.predicted_home_score,
       pred.predicted_away_score,
@@ -251,7 +251,7 @@ export async function scorePredictionsForMatch(matchId: string) {
           .eq('id', pred.user_id)
       }
     }
-  }
+  }))
 
   // Resolve H2H Challenges for this match
   const { data: challenges } = await supabase
@@ -272,7 +272,7 @@ export async function scorePredictionsForMatch(matchId: string) {
       userPointsMap.set(p.user_id, p.points_earned || 0)
     })
 
-    for (const challenge of challenges) {
+    await Promise.all(challenges.map(async (challenge) => {
       const challengerPoints = userPointsMap.get(challenge.challenger_id) || 0
       const challengedPoints = userPointsMap.get(challenge.challenged_id) || 0
 
@@ -290,6 +290,6 @@ export async function scorePredictionsForMatch(matchId: string) {
           winner_id: winnerId
         })
         .eq('id', challenge.id)
-    }
+    }))
   }
 }

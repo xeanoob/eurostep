@@ -73,7 +73,7 @@ export interface H2HChallenge {
   // Joined data
   challenger?: { username: string; avatar_url: string | null }
   challenged?: { username: string; avatar_url: string | null }
-  match?: { home_team: string; away_team: string; scheduled_at: string }
+  match?: { home_team: string; away_team: string; scheduled_at: string; home_score?: number | null; away_score?: number | null }
 }
 
 export async function createChallenge(

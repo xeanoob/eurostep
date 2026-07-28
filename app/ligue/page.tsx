@@ -1,9 +1,10 @@
-import dynamic from 'next/dynamic'
+// On renomme l'import en "dynamicImport" pour éviter le conflit
+import dynamicImport from 'next/dynamic'
 
-// L'option { ssr: false } est la clé : elle empêche Next.js d'exécuter 
-// le composant dans Node.js pendant le "pnpm run build"
-const LigueClient = dynamic(() => import('./LigueClient'), { ssr: false })
+// On utilise notre alias ici
+const LigueClient = dynamicImport(() => import('./LigueClient'), { ssr: false })
 
+// Maintenant, Next.js peut utiliser son mot-clé réservé sans problème
 export const dynamic = 'force-dynamic'
 
 export default function LiguePage() {

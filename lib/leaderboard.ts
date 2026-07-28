@@ -14,7 +14,7 @@ export interface LeaderboardEntry {
   recentForm: FormResult[]
 }
 
-export async function getLeaderboard(leagueId: string): Promise<LeaderboardEntry[]> {
+export async function getLeaderboard(leagueId: string, timeframe: 'all-time' | 'week' = 'all-time'): Promise<LeaderboardEntry[]> {
   // Get all members of the league
   const { data: members } = await supabase
     .from('league_members')
@@ -22,6 +22,16 @@ export async function getLeaderboard(leagueId: string): Promise<LeaderboardEntry
     .eq('league_id', leagueId)
 
   if (!members) return []
+
+  // Calculate the start of the week if timeframe is 'week'
+  let startOfWeek: Date | null = null
+  if (timeframe === 'week') {
+    const now = new Date()
+    const day = now.getDay()
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+    startOfWeek = new Date(now.setDate(diff))
+    startOfWeek.setHours(0, 0, 0, 0)
+  }
 
   // For each member, calculate their total points
   const entries: LeaderboardEntry[] = []
@@ -31,19 +41,28 @@ export async function getLeaderboard(leagueId: string): Promise<LeaderboardEntry
 
     const { data: predictions } = await supabase
       .from('predictions')
-      .select('points_earned, matches(date)')
+      .select('points_earned, matches(scheduled_at)')
       .eq('user_id', member.user_id)
       .not('points_earned', 'is', null)
 
-    const totalPoints = predictions?.reduce((sum, p) => sum + (p.points_earned ?? 0), 0) ?? 0
-    const exactScores = predictions?.filter((p) => (p.points_earned ?? 0) >= 10).length ?? 0
-
-    // Calculate recent form
-    const sortedPredictions = [...(predictions || [])].sort((a, b) => {
-      // @ts-ignore - Supabase types might be strict here
-      const dateA = a.matches?.date ? new Date(a.matches.date).getTime() : 0
+    // Filter predictions by timeframe
+    const validPredictions = predictions?.filter(p => {
+      if (timeframe === 'all-time') return true
       // @ts-ignore
-      const dateB = b.matches?.date ? new Date(b.matches.date).getTime() : 0
+      const matchDate = p.matches?.scheduled_at ? new Date(p.matches.scheduled_at) : null
+      if (!matchDate || !startOfWeek) return false
+      return matchDate >= startOfWeek
+    }) || []
+
+    const totalPoints = validPredictions.reduce((sum, p) => sum + (p.points_earned ?? 0), 0)
+    const exactScores = validPredictions.filter((p) => (p.points_earned ?? 0) >= 10).length
+
+    // Calculate recent form (based on validPredictions)
+    const sortedPredictions = [...validPredictions].sort((a, b) => {
+      // @ts-ignore
+      const dateA = a.matches?.scheduled_at ? new Date(a.matches.scheduled_at).getTime() : 0
+      // @ts-ignore
+      const dateB = b.matches?.scheduled_at ? new Date(b.matches.scheduled_at).getTime() : 0
       return dateB - dateA
     })
 
@@ -59,7 +78,7 @@ export async function getLeaderboard(leagueId: string): Promise<LeaderboardEntry
       userId: member.user_id,
       username: profile?.username ?? 'Joueur',
       totalPoints,
-      predictionsCount: predictions?.length ?? 0,
+      predictionsCount: validPredictions.length,
       exactScores,
       recentForm,
     })

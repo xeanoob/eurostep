@@ -16,6 +16,7 @@ export default function ClassementPage() {
   const [leagueInfo, setLeagueInfo] = useState<{ name: string; code: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [timeframe, setTimeframe] = useState<'all-time' | 'week'>('all-time')
 
   const myEntry = entries.find(e => e.userId === user?.id)
 
@@ -38,7 +39,7 @@ export default function ClassementPage() {
       const supabase = createClient()
       
       const [data, { data: leagueData }] = await Promise.all([
-        getLeaderboard(leagueId!),
+        getLeaderboard(leagueId!, timeframe),
         supabase.from('leagues').select('name, code').eq('id', leagueId).single()
       ])
       
@@ -50,7 +51,7 @@ export default function ClassementPage() {
     }
 
     load()
-  }, [leagueId, authLoading])
+  }, [leagueId, authLoading, timeframe])
 
   return (
     <div className="mx-auto flex min-h-svh max-w-md flex-col text-zinc-100">
@@ -58,37 +59,54 @@ export default function ClassementPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex items-start justify-between px-6 pt-14 pb-8"
+        className="flex flex-col px-6 pt-14 pb-6"
       >
-        <div>
-          <p className="text-xs font-semibold text-zinc-500 ml-1">
-            {entries.length} membre{entries.length !== 1 ? 's' : ''}
-          </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-white line-clamp-1">
-            {leagueInfo?.name || 'Classement'}
-          </h1>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-semibold text-zinc-500 ml-1">
+              {entries.length} membre{entries.length !== 1 ? 's' : ''}
+            </p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight text-white line-clamp-1">
+              {leagueInfo?.name || 'Classement'}
+            </h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              aria-label="Partager"
+              className="text-zinc-500 transition-colors hover:text-white"
+            >
+              <Share2 className="size-5" strokeWidth={1.5} />
+            </button>
+            
+            <Link href="/profil" className="shrink-0 rounded-full border-2 border-zinc-950 shadow-sm transition-transform hover:scale-105 active:scale-95">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Profil" className="size-10 rounded-full object-cover" />
+              ) : (
+                <div className="flex size-10 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
+                  {(profile?.username || 'J')[0]?.toUpperCase()}
+                </div>
+              )}
+            </Link>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
+
+        {/* Timeframe Toggle */}
+        <div className="mt-6 flex bg-white/5 rounded-xl p-1 border border-white/10">
           <button
-            type="button"
-            aria-label="Partager"
-            className="text-zinc-500 transition-colors hover:text-white"
+            onClick={() => setTimeframe('all-time')}
+            className={`flex-1 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all ${timeframe === 'all-time' ? 'bg-orange-500 text-white shadow-lg' : 'text-zinc-400 hover:text-white'}`}
           >
-            <Share2 className="size-5" strokeWidth={1.5} />
+            All-Time
           </button>
-          
-          <Link href="/profil" className="shrink-0 rounded-full border-2 border-zinc-950 shadow-sm transition-transform hover:scale-105 active:scale-95">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profil" className="size-10 rounded-full object-cover" />
-            ) : (
-              <div className="flex size-10 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
-                {(profile?.username || 'J')[0]?.toUpperCase()}
-              </div>
-            )}
-          </Link>
+          <button
+            onClick={() => setTimeframe('week')}
+            className={`flex-1 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all ${timeframe === 'week' ? 'bg-orange-500 text-white shadow-lg' : 'text-zinc-400 hover:text-white'}`}
+          >
+            Cette semaine
+          </button>
         </div>
       </motion.header>
-
       <main className="flex flex-1 flex-col pb-28 px-4">
         {authLoading || loading ? (
           <div className="flex flex-1 items-center justify-center">

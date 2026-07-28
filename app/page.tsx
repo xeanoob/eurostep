@@ -330,14 +330,14 @@ export default function AccueilPage() {
                 {/* Bottom: Two massive CTA buttons side-by-side */}
                 <div className="flex gap-2.5">
                   <Link
-                    href="/pronos"
+                    href={`/match/${m.id}`}
                     className="flex-1 flex flex-col items-center gap-1 rounded-xl bg-gradient-to-b from-orange-500 to-orange-600 border border-orange-700 py-3 shadow-[inset_0px_1px_0px_rgba(255,255,255,0.2)] transition-all active:scale-95 hover:from-orange-400 hover:to-orange-500"
                   >
                     <span className="text-[9px] font-bold uppercase tracking-widest text-white/70">{home.shortName}</span>
                     <span className="text-sm font-black uppercase tracking-wider text-white">Pronostiquer</span>
                   </Link>
                   <Link
-                    href="/pronos"
+                    href={`/match/${m.id}`}
                     className="flex-1 flex flex-col items-center gap-1 rounded-xl bg-gradient-to-b from-orange-500 to-orange-600 border border-orange-700 py-3 shadow-[inset_0px_1px_0px_rgba(255,255,255,0.2)] transition-all active:scale-95 hover:from-orange-400 hover:to-orange-500"
                   >
                     <span className="text-[9px] font-bold uppercase tracking-widest text-white/70">{away.shortName}</span>
@@ -370,7 +370,7 @@ export default function AccueilPage() {
                 return (
                   <Link
                     key={m.id}
-                    href="/pronos"
+                    href={`/match/${m.id}`}
                     className="group relative flex-none w-[160px] h-[200px] snap-start rounded-2xl overflow-hidden transition-transform active:scale-95"
                   >
                     {/* Background gradient from team colors */}

@@ -1,11 +1,10 @@
 'use client'
-export const dynamic = 'force-dynamic';
-import { useState } from 'react'
+
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
 import { createLeague, joinLeague, getUserLeagues, leaveLeague } from '@/lib/leagues'
 import { getUser } from '@/lib/auth'
-import { useEffect } from 'react'
 import { Copy, Check, LogOut } from 'lucide-react'
 
 import { useUser } from '@/components/user-provider'

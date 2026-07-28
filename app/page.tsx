@@ -14,6 +14,7 @@ import { AnimatedCounter } from '@/components/animated-counter'
 
 interface Match {
   id: string
+  external_id?: string
   home_team: string
   away_team: string
   league_name: string

@@ -98,7 +98,7 @@ export async function POST() {
 
       if (error) {
         console.error('Supabase error:', error)
-        return NextResponse.json({ error: 'Failed to save matches' }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to save matches', supabase_error: error.message, code: error.code, details: error.details, hint: error.hint }, { status: 500 })
       }
       insertedCount = data.length
     }

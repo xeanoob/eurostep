@@ -1,25 +1,46 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { calculateMatchPoints } from '@/lib/predictions'
 
-export async function GET() {
-  return POST()
+export async function GET(request: NextRequest) {
+  // Verify request is from Vercel Cron or has the secret
+  const authHeader = request.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+
+  if (cronSecret) {
+    const { searchParams } = new URL(request.url)
+    const querySecret = searchParams.get('secret')
+    if (authHeader !== `Bearer ${cronSecret}` && querySecret !== cronSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  }
+
+  return syncMatches()
 }
 
 export async function POST() {
+  return syncMatches()
+}
+
+async function syncMatches() {
   try {
     const supabase = createAdminClient()
 
     const ODDS_API_KEY = process.env.ODDS_API_KEY
     let selectedMatches: any[] = []
 
-    // 1. Fetch from The-Odds-API (EuroLeague + WNBA)
+    // 1. Fetch from The-Odds-API (EuroLeague + WNBA + NBA)
     if (ODDS_API_KEY) {
       try {
-        const [euroResponse, wnbaResponse] = await Promise.all([
-          fetch(`https://api.the-odds-api.com/v4/sports/basketball_euroleague/odds/?apiKey=${ODDS_API_KEY}&regions=eu&markets=h2h`),
-          fetch(`https://api.the-odds-api.com/v4/sports/basketball_wnba/odds/?apiKey=${ODDS_API_KEY}&regions=us,eu&markets=h2h`)
-        ])
+        const leagues = [
+          { key: 'basketball_euroleague', name: 'EuroLeague', regions: 'eu' },
+          { key: 'basketball_wnba', name: 'WNBA', regions: 'us,eu' },
+          { key: 'basketball_nba', name: 'NBA', regions: 'us,eu' },
+        ]
+
+        const responses = await Promise.all(
+          leagues.map(l => fetch(`https://api.the-odds-api.com/v4/sports/${l.key}/odds/?apiKey=${ODDS_API_KEY}&regions=${l.regions}&markets=h2h`))
+        )
 
         const parseOdds = async (response: Response, leagueName: string) => {
           if (!response.ok) return []
@@ -46,13 +67,14 @@ export async function POST() {
           return []
         }
 
-        const euroMatches = await parseOdds(euroResponse, 'EuroLeague')
-        const wnbaMatches = await parseOdds(wnbaResponse, 'WNBA')
+        const allMatches = await Promise.all(
+          responses.map((res, i) => parseOdds(res, leagues[i].name))
+        )
 
-        // Take up to 10 matches total (prioritize Euroleague if both active, but mix them)
-        selectedMatches = [...euroMatches, ...wnbaMatches]
+        // Merge all leagues, sort by date, keep up to 20
+        selectedMatches = allMatches.flat()
           .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
-          .slice(0, 10)
+          .slice(0, 20)
 
         console.log('Successfully fetched from The-Odds-API:', selectedMatches.length, 'matches')
       } catch (e) {
@@ -74,8 +96,13 @@ export async function POST() {
       const scoresMap = new Map<string, { homeScore: number; awayScore: number }>()
       
       try {
+        const leagueToSport: Record<string, string> = {
+          'WNBA': 'basketball_wnba',
+          'NBA': 'basketball_nba',
+          'EuroLeague': 'basketball_euroleague',
+        }
         const sportKeys = [...new Set(matchesToFinish.map(m => 
-          m.league_name === 'WNBA' ? 'basketball_wnba' : 'basketball_euroleague'
+          leagueToSport[m.league_name] || 'basketball_euroleague'
         ))]
         
         for (const sportKey of sportKeys) {

@@ -58,6 +58,43 @@ export default function AccueilPage() {
     load()
   }, [user, authLoading, leagueId])
 
+  // Live Scores Polling
+  useEffect(() => {
+    if (authLoading || !user) return
+
+    async function fetchLiveScores() {
+      try {
+        const res = await fetch('/api/matches/live')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.matches && data.matches.length > 0) {
+            setUpcoming(prevUpcoming => {
+              const newUpcoming = [...prevUpcoming]
+              data.matches.forEach((liveMatch: any) => {
+                const idx = newUpcoming.findIndex(m => m.external_id === liveMatch.external_id || m.home_team === liveMatch.home_team)
+                if (idx !== -1) {
+                  newUpcoming[idx] = {
+                    ...newUpcoming[idx],
+                    status: 'live',
+                    home_score: liveMatch.home_score,
+                    away_score: liveMatch.away_score
+                  }
+                }
+              })
+              return newUpcoming
+            })
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch live scores', e)
+      }
+    }
+
+    // Fetch immediately on mount, then every 60 seconds
+    fetchLiveScores()
+    const interval = setInterval(fetchLiveScores, 60000)
+    return () => clearInterval(interval)
+  }, [user, authLoading])
   // Filter matches by league
   const filteredUpcoming = useMemo(() => {
     if (activeFilter === 'Tous') return upcoming
@@ -276,9 +313,16 @@ export default function AccueilPage() {
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">
-                    {formatDate(m.scheduled_at)}
-                  </span>
+                  {m.status === 'live' ? (
+                    <span className="flex items-center gap-1.5 rounded-full bg-red-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-red-500 animate-pulse border border-red-500/20">
+                      <span className="size-1.5 rounded-full bg-red-500" />
+                      EN DIRECT
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">
+                      {formatDate(m.scheduled_at)}
+                    </span>
+                  )}
                 </div>
 
                 {/* Center: Teams face-off */}
@@ -302,9 +346,17 @@ export default function AccueilPage() {
                     </h3>
                   </div>
 
-                  {/* VS */}
+                  {/* VS / Score */}
                   <div className="flex flex-col items-center">
-                    <span className="text-2xl font-black italic text-white/20">VS</span>
+                    {m.status === 'live' ? (
+                      <div className="flex items-center gap-3">
+                        <span className="text-4xl font-black text-white">{m.home_score}</span>
+                        <span className="text-xl font-black text-white/30">-</span>
+                        <span className="text-4xl font-black text-white">{m.away_score}</span>
+                      </div>
+                    ) : (
+                      <span className="text-2xl font-black italic text-white/20">VS</span>
+                    )}
                   </div>
 
                   {/* Away */}

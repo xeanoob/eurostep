@@ -40,6 +40,40 @@ export default function MatchDetailPage() {
     load()
   }, [matchId, leagueId, authLoading])
 
+  // Live Scores Polling
+  useEffect(() => {
+    if (authLoading || !match) return
+    
+    // Only poll if the match is not explicitly finished in our DB
+    if (match.status === 'finished') return
+
+    async function fetchLiveScores() {
+      try {
+        const res = await fetch('/api/matches/live')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.matches && data.matches.length > 0) {
+            const liveMatch = data.matches.find((m: any) => m.external_id === match.external_id || m.home_team === match.home_team)
+            if (liveMatch) {
+              setMatch((prev: any) => ({
+                ...prev,
+                status: 'live',
+                home_score: liveMatch.home_score,
+                away_score: liveMatch.away_score
+              }))
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch live scores', e)
+      }
+    }
+
+    fetchLiveScores()
+    const interval = setInterval(fetchLiveScores, 60000)
+    return () => clearInterval(interval)
+  }, [match?.status, match?.external_id, match?.home_team, authLoading])
+
   if (authLoading || loading) {
     return (
       <div className="mx-auto flex min-h-svh max-w-md flex-col text-zinc-100 bg-[#0B0E14]">

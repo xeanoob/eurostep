@@ -84,7 +84,7 @@ export async function POST() {
           .eq('id', m.id)
 
         // Calculate points for all users who predicted this match
-        await calculateMatchPoints(m.id, homeScore, awayScore)
+        await calculateMatchPoints(m.id, homeScore, awayScore, supabase)
       }
     }
 

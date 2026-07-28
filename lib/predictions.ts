@@ -111,8 +111,10 @@ export async function getLeaguePredictions(leagueId: string, matchId: string) {
   }).sort((a, b) => (b.points || 0) - (a.points || 0))
 }
 
-export async function calculateMatchPoints(matchId: string, actualHomeScore: number, actualAwayScore: number) {
-  const { data: predictions, error } = await supabase
+export async function calculateMatchPoints(matchId: string, actualHomeScore: number, actualAwayScore: number, externalSupabase?: any) {
+  const db = externalSupabase || supabase
+
+  const { data: predictions, error } = await db
     .from('predictions')
     .select('*')
     .eq('match_id', matchId)
@@ -141,13 +143,13 @@ export async function calculateMatchPoints(matchId: string, actualHomeScore: num
       points += 1
     }
 
-    await supabase
+    await db
       .from('predictions')
       .update({ points_earned: points })
       .eq('id', pred.id)
 
     // Streak logic
-    const { data: profile } = await supabase
+    const { data: profile } = await db
       .from('profiles')
       .select('current_streak, longest_streak')
       .eq('id', pred.user_id)
@@ -158,7 +160,7 @@ export async function calculateMatchPoints(matchId: string, actualHomeScore: num
       const newLongest = Math.max(profile.longest_streak || 0, newStreak);
       
       if (newStreak !== profile.current_streak || newLongest !== profile.longest_streak) {
-        await supabase
+        await db
           .from('profiles')
           .update({ current_streak: newStreak, longest_streak: newLongest })
           .eq('id', pred.user_id)

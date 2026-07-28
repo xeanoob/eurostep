@@ -124,7 +124,7 @@ export async function calculateMatchPoints(matchId: string, actualHomeScore: num
   const actualDiff = actualHomeScore - actualAwayScore
   const actualWinner = actualDiff > 0 ? 'home' : actualDiff < 0 ? 'away' : 'draw'
 
-  await Promise.all(predictions.map(async (pred) => {
+  await Promise.all(predictions.map(async (pred: any) => {
     const predDiff = pred.predicted_home_score - pred.predicted_away_score
     const predWinner = predDiff > 0 ? 'home' : predDiff < 0 ? 'away' : 'draw'
     

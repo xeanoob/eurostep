@@ -51,16 +51,19 @@ export default function MatchDetailPage() {
       try {
         const res = await fetch('/api/matches/live')
         if (res.ok) {
-          const data = await res.json()
-          if (data.matches && data.matches.length > 0) {
-            const liveMatch = data.matches.find((m: any) => m.external_id === match.external_id || m.home_team === match.home_team)
-            if (liveMatch) {
-              setMatch((prev: any) => ({
-                ...prev,
-                status: 'live',
-                home_score: liveMatch.home_score,
-                away_score: liveMatch.away_score
-              }))
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.indexOf("application/json") !== -1) {
+            const data = await res.json()
+            if (data.matches && data.matches.length > 0) {
+              const liveMatch = data.matches.find((m: any) => m.external_id === match.external_id || m.home_team === match.home_team)
+              if (liveMatch) {
+                setMatch((prev: any) => ({
+                  ...prev,
+                  status: 'live',
+                  home_score: liveMatch.home_score,
+                  away_score: liveMatch.away_score
+                }))
+              }
             }
           }
         }

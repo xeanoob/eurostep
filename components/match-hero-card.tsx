@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { findTeam, type TeamData } from '@/lib/teams'
-import { Clock, Minus, Plus, Users, X } from 'lucide-react'
+import { Clock, Minus, Plus, Users, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { generateOdds } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -28,6 +28,8 @@ interface MatchHeroCardProps {
   hasActiveBoost?: boolean
 }
 
+import { useRef } from 'react'
+
 function ScoreStepper({
   value,
   onChange,
@@ -35,34 +37,41 @@ function ScoreStepper({
   value: number
   onChange: (v: number) => void
 }) {
+  const startValue = useRef(value)
+
   return (
-    <div className="flex flex-col items-center gap-2">
-      <output className="font-display text-5xl font-black tabular-nums leading-none tracking-tighter text-white drop-shadow-md h-12 flex items-center">
+    <div className="flex items-center justify-center gap-1 w-full px-1">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, value - 1))}
+        className="p-1 text-zinc-300 transition-colors hover:text-white active:scale-90"
+        aria-label="Diminuer"
+      >
+        <ChevronLeft className="size-8" strokeWidth={2.5} />
+      </button>
+
+      <motion.div
+        className="font-display text-5xl font-black tabular-nums leading-none tracking-tighter text-white h-12 w-16 flex items-center justify-center cursor-ew-resize select-none touch-none"
+        onPanStart={() => {
+          startValue.current = value
+        }}
+        onPan={(e, info) => {
+          // Adjust sensitivity: 1 point every 4 pixels dragged horizontally
+          const diff = Math.round(info.offset.x / 4)
+          onChange(Math.max(0, startValue.current + diff))
+        }}
+      >
         {value}
-      </output>
-      <div className="flex items-center gap-1 bg-[#0B0E14] p-1.5 rounded-full border border-white/5 shadow-inner mt-2">
-        <button
-          type="button"
-          onClick={() => {
-            onChange(Math.max(0, value - 1))
-          }}
-          className="flex size-9 items-center justify-center rounded-full bg-white/5 text-zinc-400 transition-colors hover:bg-white/10 active:scale-90 active:bg-orange-500/20 active:text-white"
-          aria-label="Diminuer"
-        >
-          <Minus className="size-4" strokeWidth={2.5} />
-        </button>
-        <div className="w-1" />
-        <button
-          type="button"
-          onClick={() => {
-            onChange(value + 1)
-          }}
-          className="flex size-9 items-center justify-center rounded-full bg-white/5 text-zinc-400 transition-colors hover:bg-white/10 active:scale-90 active:bg-orange-500/20 active:text-white"
-          aria-label="Augmenter"
-        >
-          <Plus className="size-4" strokeWidth={2.5} />
-        </button>
-      </div>
+      </motion.div>
+
+      <button
+        type="button"
+        onClick={() => onChange(value + 1)}
+        className="p-1 text-zinc-300 transition-colors hover:text-white active:scale-90"
+        aria-label="Augmenter"
+      >
+        <ChevronRight className="size-8" strokeWidth={2.5} />
+      </button>
     </div>
   )
 }
@@ -131,24 +140,16 @@ export function MatchHeroCard({
   }
 
   return (
-    <div className={`relative mx-auto w-full max-w-md rounded-xl bg-[#161B26] border shadow-xl overflow-hidden transition-all duration-500 ${isBoosted ? 'border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.3)]' : 'border-slate-800/50'}`}>
+    <div className={`relative mx-auto w-full max-w-md rounded-[32px] bg-[#111317]/60 backdrop-blur-2xl border shadow-sm overflow-hidden transition-all duration-500 ${isBoosted ? 'border-orange-500 shadow-orange-500/20 shadow-lg' : 'border-white/50'}`}>
       {/* SECTION 1: The Visual Hero */}
-      <div className="relative w-full h-48 overflow-hidden rounded-t-xl border-b border-zinc-800" style={{ background: `linear-gradient(135deg, ${home.colors.primary}18 0%, #0B0E14 50%, ${away.colors.primary}18 100%)` }}>
-        {/* Dynamic team glow */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          background: `radial-gradient(ellipse at 15% 80%, ${home.colors.primary}30 0%, transparent 55%), radial-gradient(ellipse at 85% 80%, ${away.colors.primary}30 0%, transparent 55%)`
-        }} />
-        
-        {/* Fire overlay if boosted */}
-        {isBoosted && (
-          <div className="absolute inset-0 pointer-events-none mix-blend-color-dodge opacity-40 bg-[url('https://www.transparenttextures.com/patterns/fire-pattern.png')]" />
-        )}
-        {/* Background Logos (The Fade Effect) */}
+      <div className="relative w-full h-[180px] overflow-hidden rounded-t-[32px] border-b border-white/10 bg-transparent">
+        {/* Background Logos */}
         {home.logoUrl && (
           <img 
             src={home.logoUrl} 
             alt="" 
-            className="absolute -left-10 top-0 h-full opacity-10 object-cover select-none pointer-events-none"
+            className="absolute -left-12 top-4 h-[280px] w-[280px] opacity-[0.07] object-contain object-left select-none pointer-events-none drop-shadow-sm"
+            style={{ WebkitMaskImage: 'linear-gradient(to right, black 40%, transparent 100%)', maskImage: 'linear-gradient(to right, black 40%, transparent 100%)' }}
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         )}
@@ -156,7 +157,8 @@ export function MatchHeroCard({
           <img 
             src={away.logoUrl} 
             alt="" 
-            className="absolute -right-10 top-0 h-full opacity-10 object-cover select-none pointer-events-none"
+            className="absolute -right-12 top-4 h-[280px] w-[280px] opacity-[0.07] object-contain object-right select-none pointer-events-none drop-shadow-sm"
+            style={{ WebkitMaskImage: 'linear-gradient(to left, black 40%, transparent 100%)', maskImage: 'linear-gradient(to left, black 40%, transparent 100%)' }}
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         )}
@@ -166,47 +168,47 @@ export function MatchHeroCard({
           <img 
             src={home.starPlayer.imageUrl} 
             alt={home.starPlayer.name} 
-            className="absolute bottom-0 left-2 h-40 object-contain z-10"
-            style={{ maskImage: 'linear-gradient(to top, transparent 0%, black 15%, black 100%)', WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 15%, black 100%)' }}
+            className="absolute bottom-0 -left-6 h-full w-auto max-w-[65%] object-contain object-left-bottom z-10 drop-shadow-2xl"
+            style={{ WebkitMaskImage: 'linear-gradient(to right, black 80%, transparent 100%)', maskImage: 'linear-gradient(to right, black 80%, transparent 100%)' }}
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
-          <div className="absolute bottom-0 left-2 h-40 w-32 bg-slate-800/20 rounded-t-full z-10" />
+          <div className="absolute bottom-0 left-2 h-64 w-48 bg-black/5 rounded-t-full z-10" />
         )}
         {away.starPlayer.imageUrl ? (
           <img 
             src={away.starPlayer.imageUrl} 
             alt={away.starPlayer.name} 
-            className="absolute bottom-0 right-2 h-40 object-contain z-10 scale-x-[-1]"
-            style={{ maskImage: 'linear-gradient(to top, transparent 0%, black 15%, black 100%)', WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 15%, black 100%)' }}
+            className="absolute bottom-0 -right-6 h-full w-auto max-w-[65%] object-contain object-right-bottom z-10 scale-x-[-1] drop-shadow-2xl"
+            style={{ WebkitMaskImage: 'linear-gradient(to left, black 80%, transparent 100%)', maskImage: 'linear-gradient(to left, black 80%, transparent 100%)' }}
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
-          <div className="absolute bottom-0 right-2 h-40 w-32 bg-slate-800/20 rounded-t-full z-10" />
+          <div className="absolute bottom-0 right-2 h-64 w-48 bg-black/5 rounded-t-full z-10" />
         )}
 
         {/* Center Info */}
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#161B26] to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-20 pointer-events-none">
+
+        <div className="absolute inset-0 flex flex-col items-center justify-start z-20 pointer-events-none pt-4">
           {matchStatus === 'live' ? (
-            <div className="flex flex-col items-center mt-6">
-              <span className="flex items-center gap-1.5 text-xs font-black text-red-500 uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 animate-pulse">
-                <span className="size-2 rounded-full bg-red-500" /> LIVE
+            <div className="flex flex-col items-center mt-2">
+              <span className="flex items-center gap-2 text-sm font-black text-red-500 uppercase tracking-[0.2em] bg-red-50 px-3 py-1 rounded-full border border-red-500/20 animate-pulse shadow-sm">
+                <span className="size-2.5 rounded-full bg-red-500" /> LIVE
               </span>
-              <div className="flex items-center gap-3 mt-2 font-display text-4xl font-black text-white">
+              <div className="flex items-center gap-4 mt-3 font-display text-5xl font-black text-white">
                 <motion.span 
                   key={actualHomeScore}
-                  initial={{ backgroundColor: 'rgba(34, 197, 94, 0.5)' }}
+                  initial={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
                   animate={{ backgroundColor: 'transparent' }}
                   transition={{ duration: 1 }}
                   className="px-2 rounded"
                 >
                   {actualHomeScore ?? 0}
                 </motion.span>
-                <span className="text-zinc-600 text-2xl">-</span>
+                <span className="text-zinc-300 text-3xl">-</span>
                 <motion.span 
                   key={actualAwayScore}
-                  initial={{ backgroundColor: 'rgba(34, 197, 94, 0.5)' }}
+                  initial={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
                   animate={{ backgroundColor: 'transparent' }}
                   transition={{ duration: 1 }}
                   className="px-2 rounded"
@@ -216,32 +218,34 @@ export function MatchHeroCard({
               </div>
             </div>
           ) : matchStatus === 'finished' ? (
-            <div className="flex flex-col items-center mt-6">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Terminé</span>
-              <div className="flex items-center gap-3 mt-1 font-display text-3xl font-black text-white">
+            <div className="flex flex-col items-center mt-2">
+              <span className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em] bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-white/10">Terminé</span>
+              <div className="flex items-center gap-4 mt-3 font-display text-4xl font-black text-white">
                 <span>{actualHomeScore ?? 0}</span>
-                <span className="text-zinc-600">-</span>
+                <span className="text-zinc-300">-</span>
                 <span>{actualAwayScore ?? 0}</span>
               </div>
             </div>
           ) : (
-            <>
-              <span className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">{dayStr}</span>
-              <span className="text-sm text-white font-bold my-0.5">{dateStr}</span>
-              <span className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">{timeStr}</span>
-              <span className="mt-2 text-3xl text-white font-black italic drop-shadow-md">Vs</span>
-            </>
+            <div className="flex flex-col items-center mt-2">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.2em]">{dayStr}</span>
+                <span className="text-[10px] text-zinc-300 font-bold">•</span>
+                <span className="text-[10px] text-white font-black uppercase tracking-[0.1em]">{dateStr}</span>
+              </div>
+              <span className="font-display text-3xl font-black tracking-tight text-white drop-shadow-sm">{timeStr}</span>
+            </div>
           )}
         </div>
 
         {/* Team Names (Bottom Overlapping) */}
-        <div className="absolute bottom-2 left-4 z-20">
-          <h3 className="text-2xl text-white font-black italic uppercase tracking-tighter w-24">
+        <div className="absolute bottom-4 left-4 z-20">
+          <h3 className="text-3xl text-white font-black uppercase tracking-tighter w-24 leading-[0.85] font-helvetica italic">
             {home.shortName}
           </h3>
         </div>
-        <div className="absolute bottom-2 right-4 z-20 text-right">
-          <h3 className="text-2xl text-white font-black italic uppercase tracking-tighter w-24 text-right">
+        <div className="absolute bottom-4 right-4 z-20 text-right flex justify-end">
+          <h3 className="text-3xl text-white font-black uppercase tracking-tighter w-24 leading-[0.85] text-right font-helvetica italic">
             {away.shortName}
           </h3>
         </div>
@@ -250,7 +254,7 @@ export function MatchHeroCard({
         {leagueId && (
           <button 
             onClick={handleShowPredictions}
-            className="absolute top-3 right-3 z-40 rounded-full bg-black/30 backdrop-blur-md p-2 text-white/70 hover:text-white transition-colors border border-white/10"
+            className="absolute top-3 right-3 z-40 rounded-full bg-white/10 shadow-sm p-2 text-zinc-400 hover:text-white transition-colors border border-white/10"
           >
             <Users className="size-4" />
           </button>
@@ -258,42 +262,39 @@ export function MatchHeroCard({
       </div>
 
       {/* SECTION 2: The Prediction Controls */}
-      <div className="bg-[#161B26] p-6 rounded-b-xl flex flex-col items-center border border-t-0 border-white/5 shadow-2xl">
-        <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-          Fais ton pronostic
-        </p>
-
+      <div className="bg-transparent p-5 rounded-b-[32px] flex flex-col items-center">
         {/* Score Inputs Row */}
-        <div className="flex w-full items-start justify-center relative mb-6">
-          <div className="flex flex-col items-center w-[120px]">
-            <span className="mb-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">{home.shortName}</span>
+        <div className="flex w-full items-center justify-between relative mb-4 gap-2">
+          <div className="flex flex-col items-center w-full max-w-[150px]">
+            <span className="mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">{home.shortName}</span>
             <ScoreStepper value={homeScore} onChange={setHomeScore} />
           </div>
           
-          <div className="absolute top-8 bottom-12 left-1/2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-zinc-800/50 to-transparent" />
+          <div className="absolute top-6 bottom-4 left-1/2 w-px -translate-x-1/2 bg-black/5" />
           
-          <div className="flex flex-col items-center w-[120px]">
-            <span className="mb-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">{away.shortName}</span>
+          <div className="flex flex-col items-center w-full max-w-[150px]">
+            <span className="mb-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">{away.shortName}</span>
             <ScoreStepper value={awayScore} onChange={setAwayScore} />
           </div>
         </div>
 
         {/* Meta Info */}
-        <div className="flex flex-col items-center gap-1.5 mb-6">
-          <div className="flex items-center gap-1.5 text-zinc-500">
+        <div className="flex flex-col items-center w-full mb-4">
+          <div className="flex items-center gap-2 text-zinc-400 mb-4">
             <Clock className="size-3.5" />
-            <p className="text-[10px] font-bold uppercase tracking-widest">
-              Pronostic avant le {dateStr}
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em]">
+              Avant le {dateStr}
             </p>
           </div>
 
-          <div className="flex items-center justify-between w-full mt-4 px-2">
+          <div className="flex items-center justify-between w-full border-t border-white/10 pt-4">
             <div className="flex flex-col items-start">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-1">
                 Gain potentiel
               </p>
-              <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 font-display text-sm font-bold uppercase tracking-wide text-emerald-400 shadow-sm flex items-center gap-1 mt-1">
-                <AnimatedCounter value={potentialPoints} /> PTS {isBoosted && <span className="text-orange-500 ml-1">🔥 x2</span>}
+              <span className="font-display text-2xl font-black uppercase tracking-wide text-white flex items-center gap-1.5">
+                <AnimatedCounter value={potentialPoints} /> PTS 
+                {isBoosted && <span className="text-blaze text-xs tracking-normal flex items-center gap-0.5 bg-blaze/10 px-1.5 py-0.5 rounded uppercase font-bold"><span className="text-sm">🔥</span> x2</span>}
               </span>
             </div>
             
@@ -306,13 +307,14 @@ export function MatchHeroCard({
                   setIsBoosted(!isBoosted)
                 }}
                 disabled={submitted}
-                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold uppercase tracking-widest transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 text-[11px] font-black uppercase tracking-[0.2em] transition-colors ${
                   isBoosted 
-                    ? 'border-orange-500 bg-orange-500/20 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.3)]' 
-                    : 'border-zinc-700 bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    ? 'text-blaze' 
+                    : 'text-zinc-400 hover:text-white'
                 } ${submitted ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                🔥 Boost x2
+                <span className={`text-lg transition-transform ${isBoosted ? 'scale-110' : 'grayscale opacity-50'}`}>🔥</span>
+                Boost
               </button>
             )}
           </div>
@@ -329,7 +331,7 @@ export function MatchHeroCard({
               whileTap={{ scale: 0.95 }}
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full h-16 mt-2 rounded-2xl font-display text-xl font-black uppercase tracking-widest text-white transition-all shadow-[0_10px_20px_-10px_rgba(249,115,22,0.4)] border border-orange-500/50 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 disabled:opacity-50"
+              className="w-full h-[52px] mt-2 rounded-xl font-bold text-xs uppercase tracking-[0.2em] text-[#111317] transition-all shadow-sm bg-white hover:bg-zinc-200 disabled:opacity-50 active:scale-[0.98]"
             >
               {isSubmitting ? 'Envoi...' : 'Valider mon prono'}
             </motion.button>
@@ -341,7 +343,7 @@ export function MatchHeroCard({
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 400, damping: 20 }}
               disabled
-              className="w-full h-16 mt-2 rounded-2xl font-display text-xl font-black uppercase tracking-widest text-white transition-all shadow-[0_0_30px_rgba(52,211,153,0.4)] border border-emerald-400/50 bg-gradient-to-r from-emerald-500 to-emerald-400"
+              className="w-full h-[52px] mt-2 rounded-xl font-bold text-xs uppercase tracking-[0.2em] text-white transition-all shadow-sm bg-emerald-500"
             >
               ✅ Pronostic Validé
             </motion.button>
@@ -358,25 +360,25 @@ export function MatchHeroCard({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowPredictionsModal(false)}
-              className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm cursor-pointer"
+              className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-sm cursor-pointer"
             />
             <motion.div 
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[100] max-h-[85vh] bg-[#161B26] rounded-t-3xl border-t border-slate-800 shadow-2xl flex flex-col mx-auto max-w-md"
+              className="fixed bottom-0 left-0 right-0 z-[100] max-h-[85vh] bg-white/10 rounded-t-[32px] border-t border-white/10 shadow-2xl flex flex-col mx-auto max-w-md"
             >
               {/* Drag Handle */}
               <div className="flex w-full justify-center pt-4 pb-2 cursor-grab active:cursor-grabbing" onClick={() => setShowPredictionsModal(false)}>
-                <div className="h-1.5 w-12 rounded-full bg-slate-700" />
+                <div className="h-1.5 w-12 rounded-full bg-zinc-200" />
               </div>
 
               <div className="flex items-center justify-between px-6 pt-2 pb-4">
                 <h3 className="font-bold text-lg text-white">
                   Pronos de la Ligue
                 </h3>
-                <button onClick={() => setShowPredictionsModal(false)} className="rounded-full bg-white/5 p-1.5 text-white/50 hover:bg-white/10 hover:text-white">
+                <button onClick={() => setShowPredictionsModal(false)} className="rounded-full bg-zinc-100 p-1.5 text-zinc-400 hover:bg-zinc-200 hover:text-white">
                   <X className="size-4" />
                 </button>
               </div>
@@ -384,36 +386,36 @@ export function MatchHeroCard({
               <div className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col gap-3">
                 {loadingPredictions ? (
                   <div className="flex flex-col items-center justify-center h-40 gap-3">
-                    <div className="size-6 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
+                    <div className="size-6 rounded-full border-2 border-zinc-900 border-t-transparent animate-spin" />
                   </div>
                 ) : leaguePredictions.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-40">
-                    <Users className="size-8 text-slate-700 mb-3" />
-                    <p className="text-[11px] uppercase tracking-widest font-semibold text-slate-500 text-center">Aucune prédiction</p>
+                    <Users className="size-8 text-zinc-200 mb-3" />
+                    <p className="text-[11px] uppercase tracking-widest font-semibold text-zinc-400 text-center">Aucune prédiction</p>
                   </div>
                 ) : (
                   leaguePredictions.map(p => (
-                    <Link href={`/profil/${p.userId}`} key={p.userId} className="group relative flex items-center justify-between rounded-xl bg-[#0F131A] p-4 border border-white/5 shadow-sm transition-colors hover:bg-white/5 cursor-pointer">
+                    <Link href={`/profil/${p.userId}`} key={p.userId} className="group relative flex items-center justify-between rounded-2xl bg-white/5 p-4 border border-white/10 shadow-sm transition-colors hover:bg-zinc-100 cursor-pointer">
                       <div className="flex items-center gap-4">
                         {p.avatar_url ? (
                           <img src={p.avatar_url} className="size-11 rounded-full object-cover border border-white/10" />
                         ) : (
-                          <div className="flex size-11 items-center justify-center rounded-full bg-slate-800 text-lg font-bold text-white">
+                          <div className="flex size-11 items-center justify-center rounded-full bg-zinc-200 text-lg font-bold text-zinc-600">
                             {p.username[0].toUpperCase()}
                           </div>
                         )}
                         <div className="flex flex-col">
                           <p className="font-bold text-white">{p.username}</p>
                           <div className="flex items-center gap-1.5">
-                            <p className="text-xs font-semibold text-slate-400">{p.points ?? 0} pts gagnés</p>
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">{p.points ?? 0} pts gagnés</p>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2 rounded-xl bg-black/40 px-3 py-1.5 border border-white/5">
-                        <span className="font-bold text-white">{p.homeScore}</span>
-                        <span className="text-slate-500 text-xs font-bold">-</span>
-                        <span className="font-bold text-white">{p.awayScore}</span>
+                      <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 border border-white/10 shadow-sm">
+                        <span className="font-black text-white tabular-nums font-display">{p.homeScore}</span>
+                        <span className="text-zinc-300 text-xs font-bold">-</span>
+                        <span className="font-black text-white tabular-nums font-display">{p.awayScore}</span>
                       </div>
                     </Link>
                   ))

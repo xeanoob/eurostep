@@ -3,13 +3,12 @@
 import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BottomNav } from '@/components/bottom-nav'
 import { useUser } from '@/components/user-provider'
 import { getUserStats } from '@/lib/leaderboard'
 import { getUserPredictions } from '@/lib/predictions'
 import { findTeam } from '@/lib/teams'
 import { signOut } from '@/lib/auth'
-import { ArrowRight, LogOut, Camera, ChevronRight, Loader2, Share2, Flame, Snowflake } from 'lucide-react'
+import { ArrowRight, LogOut, Camera, ChevronRight, Loader2, Share2, Flame, Snowflake, Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import html2canvas from 'html2canvas'
 import { triggerExactScoreConfetti } from '@/lib/confetti'
@@ -28,7 +27,7 @@ interface PredictionWithMatch {
   }
 }
 
-export default function ProfilPage() {
+export function ProfilView() {
   const router = useRouter()
   const { user, profile, loading: authLoading } = useUser()
   const [stats, setStats] = useState({ totalPoints: 0, exactScores: 0, totalPredictions: 0, successRate: 0 })
@@ -36,6 +35,9 @@ export default function ProfilPage() {
   const [loading, setLoading] = useState(true)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
+  const [isEditingPseudo, setIsEditingPseudo] = useState(false)
+  const [newPseudo, setNewPseudo] = useState('')
+  const [isSavingPseudo, setIsSavingPseudo] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -143,6 +145,20 @@ export default function ProfilPage() {
     )
   }
 
+  const handleUpdatePseudo = async () => {
+    if (!user || !newPseudo.trim()) return
+    setIsSavingPseudo(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('profiles').update({ username: newPseudo.trim() }).eq('id', user.id)
+    setIsSavingPseudo(false)
+    if (error) {
+      alert("Erreur lors de la modification du pseudo")
+    } else {
+      setIsEditingPseudo(false)
+      window.location.reload()
+    }
+  }
+
   const username = profile?.username ?? 'Joueur'
   const avatarUrl = profile?.avatar_url
 
@@ -175,106 +191,106 @@ export default function ProfilPage() {
     <div className="mx-auto flex min-h-svh max-w-md flex-col pb-28 text-zinc-100">
 
       {/* ─── VIP PLAYER CARD ─── */}
-      <section id="vip-card" className="relative mx-5 mt-14 rounded-3xl overflow-hidden bg-[#161B26] border border-white/5 shadow-2xl">
-        {/* Subtle top glow */}
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-orange-500/10 to-transparent" />
+      <section id="vip-card" className="relative mx-5 mt-14 rounded-[32px] overflow-hidden border border-white/10 shadow-2xl pb-6">
+        {/* Colorful Abstract Background */}
+        <div className="absolute inset-0 z-0 bg-[#161B26]" />
+        <div className="absolute inset-0 z-0 opacity-80" style={{
+          backgroundImage: `
+            radial-gradient(circle at 15% 10%, #FFB563 0%, transparent 40%),
+            radial-gradient(circle at 85% 20%, #8b5cf6 0%, transparent 45%),
+            radial-gradient(circle at 50% 60%, #ec4899 0%, transparent 50%),
+            linear-gradient(to bottom, transparent 30%, #161B26 90%)
+          `
+        }} />
         
-        <div className="relative px-6 pt-6 pb-6">
-          <div className="flex items-center justify-between mb-4">
-            <button onClick={() => router.back()} className="hide-on-share text-zinc-500 active:text-white transition-colors">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m15 18-6-6 6-6"/>
-              </svg>
-            </button>
-            
-            <button onClick={handleShare} disabled={isSharing} className="hide-on-share flex size-8 items-center justify-center rounded-full bg-white/5 text-zinc-400 active:bg-white/10 transition-colors">
-              {isSharing ? <Loader2 className="size-3.5 animate-spin" /> : <Share2 className="size-3.5" />}
-            </button>
-          </div>
+        {/* Top actions */}
+        <div className="relative z-10 flex items-center justify-end gap-2 px-6 pt-6">
+          <button onClick={handleShare} disabled={isSharing} className="hide-on-share flex size-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md text-white active:bg-white/20 transition-colors border border-white/10">
+            {isSharing ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
+          </button>
+          <Link href="/?tab=parametres" className="flex size-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md text-white active:bg-white/20 transition-colors border border-white/10">
+            <Settings className="size-4" />
+          </Link>
+        </div>
 
-          {/* Avatar + Name + Streak */}
-          <div className="flex flex-col items-center mt-2 mb-5">
-            <div className="relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-              <input 
-                type="file" ref={fileInputRef} hidden accept="image/*" 
-                onChange={handleFileSelect} disabled={isUploadingAvatar}
-              />
-              {/* Outer ring */}
-              <div className={`p-1 rounded-full bg-gradient-to-b shadow-[0_0_20px_rgba(234,88,12,0.15)] ${isHot ? 'from-orange-500/80 to-orange-500/20 shadow-[0_0_25px_rgba(234,88,12,0.4)]' : isCold ? 'from-blue-500/50 to-blue-500/10 shadow-[0_0_25px_rgba(59,130,246,0.2)]' : 'from-orange-500/50 to-orange-500/10'}`}>
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={username} className={`size-24 rounded-full object-cover border-4 border-[#161B26] ${isUploadingAvatar ? 'opacity-50' : ''}`} />
-                ) : (
-                  <div className={`flex size-24 items-center justify-center rounded-full bg-zinc-900 border-4 border-[#161B26] text-3xl font-black text-white ${isUploadingAvatar ? 'opacity-50' : ''}`}>
-                    {username[0]?.toUpperCase()}
-                  </div>
-                )}
-              </div>
-              
-              {isUploadingAvatar ? (
-                <div className="absolute inset-0 flex items-center justify-center rounded-full">
-                  <Loader2 className="size-5 text-white animate-spin" />
-                </div>
+        <div className="relative z-10 px-6 pt-2 flex flex-col items-center text-center">
+          {/* Avatar */}
+          <label className="relative inline-block cursor-pointer mb-4">
+            <input 
+              type="file" hidden accept="image/*" 
+              onChange={handleFileSelect} disabled={isUploadingAvatar}
+            />
+            <div className="relative p-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={username} className={`size-20 rounded-full object-cover ${isUploadingAvatar ? 'opacity-50' : ''}`} />
               ) : (
-                <div className="hide-on-share absolute bottom-1 right-1 flex size-7 items-center justify-center rounded-full bg-zinc-800 border-2 border-[#161B26] shadow-lg hover:bg-zinc-700 transition-colors">
-                  <Camera className="size-3.5 text-zinc-400" />
+                <div className={`flex size-20 items-center justify-center rounded-full bg-zinc-800 text-3xl font-black text-white ${isUploadingAvatar ? 'opacity-50' : ''}`}>
+                  {username[0]?.toUpperCase()}
                 </div>
               )}
-
-              {/* Streak Badge */}
-              {isHot && (
-                <div className="absolute -left-2 -top-2 flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-600 border-2 border-[#161B26] shadow-lg animate-bounce">
-                  <Flame className="size-4 text-white" />
-                </div>
-              )}
-              {isCold && (
-                <div className="absolute -left-2 -top-2 flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-cyan-600 border-2 border-[#161B26] shadow-lg">
-                  <Snowflake className="size-4 text-white" />
+              
+              {/* Status Indicator (Hot/Cold) */}
+              {(isHot || isCold) && (
+                <div className={`absolute bottom-1 right-1 flex size-6 items-center justify-center rounded-full border-2 border-[#161B26] shadow-sm ${isHot ? 'bg-green-500' : 'bg-blue-500'}`}>
+                  {isHot ? <Flame className="size-3 text-white" /> : <Snowflake className="size-3 text-white" />}
                 </div>
               )}
             </div>
+            {isUploadingAvatar && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-full">
+                <Loader2 className="size-5 text-white animate-spin" />
+              </div>
+            )}
+          </label>
 
-            <h1 className="mt-4 text-2xl font-black text-white flex items-center gap-2">
+          {/* Name & Title */}
+          <div className="flex flex-col items-center justify-center mb-1">
+            <h1 className="text-3xl font-black text-white font-helvetica italic tracking-tight">
               {username}
             </h1>
-            
-            <div className="mt-1 mb-2 flex items-center justify-center">
-              <span className="rounded bg-[#0B0E14] border border-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-400 shadow-inner">
-                {playerTitle}
-              </span>
+          </div>
+          <p className="text-sm font-semibold text-white/60 mb-5">
+            {playerTitle}
+          </p>
+
+          {/* Progress Bar */}
+          <div className="w-full mb-8 mt-2 px-2">
+            <div className="flex items-center justify-between text-[10px] font-bold text-white/60 mb-1.5 uppercase tracking-widest">
+              <span>Progression</span>
+              <span>{Math.round(progressPct)}%</span>
             </div>
-            
-            {/* Rank Progress Bar */}
-            <div className="mt-3 w-full max-w-[200px]">
-              <div className="flex justify-between text-[8px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">
-                <span>{pts} pts</span>
-                <span>{ptsToNext > 0 ? `${ptsToNext} pts to ${pts >= 100 ? 'All-Star' : pts >= 30 ? 'Starter' : pts >= 10 ? '6th Man' : 'Bench'}` : 'Max Rank'}</span>
-              </div>
-              <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-1000"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
+            <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden backdrop-blur-sm border border-white/5">
+              <div 
+                className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
             </div>
           </div>
 
-          {/* Stats grid on the card */}
-          <div className="grid grid-cols-4 gap-2 pt-5 border-t border-white/5">
+          {/* Stats Grid */}
+          <div className="w-full flex items-center justify-between mb-8 px-2">
             <div className="flex flex-col items-center">
-              <p className="text-xl font-black tabular-nums text-white">{stats.totalPoints}</p>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Points</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Flame className="size-4 text-white" />
+                <span className="text-xl font-black text-white tabular-nums">{stats.totalPoints}</span>
+              </div>
+              <span className="text-[10px] font-semibold text-white/60">Points</span>
             </div>
+            
             <div className="flex flex-col items-center">
-              <p className="text-xl font-black tabular-nums text-white">{stats.exactScores}</p>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Exacts</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <svg className="size-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                <span className="text-xl font-black text-white tabular-nums">{stats.exactScores}</span>
+              </div>
+              <span className="text-[10px] font-semibold text-white/60">Scores Exacts</span>
             </div>
+            
             <div className="flex flex-col items-center">
-              <p className="text-xl font-black tabular-nums text-white">{stats.successRate}<span className="text-xs text-zinc-500">%</span></p>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Réussite</p>
-            </div>
-            <div className="flex flex-col items-center">
-              <p className="text-xl font-black tabular-nums text-white">{stats.totalPredictions}</p>
-              <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-500 mt-1">Pronos</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <svg className="size-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span className="text-xl font-black text-white tabular-nums">{stats.successRate}%</span>
+              </div>
+              <span className="text-[10px] font-semibold text-white/60">Réussite</span>
             </div>
           </div>
         </div>
@@ -283,27 +299,29 @@ export default function ProfilPage() {
       <main className="flex flex-1 flex-col gap-5 px-5 mt-5">
 
         {/* ─── NAVIGATION ─── */}
-        <section className="rounded-2xl bg-[#161B26] overflow-hidden">
-          <Link href="/ligue" className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60 active:bg-zinc-800/30">
+        <section className="rounded-2xl bg-[#161B26]/80 backdrop-blur-md border border-white/5 overflow-hidden">
+          <Link href="/ligue" className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60 active:bg-zinc-800/30 transition-colors">
             <span className="text-sm font-semibold text-white">Ma ligue</span>
             <ChevronRight className="size-4 text-zinc-600" />
           </Link>
-          <Link href="/classement" className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60 active:bg-zinc-800/30">
+          <Link href="/?tab=classement" className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60 active:bg-zinc-800/30 transition-colors">
             <span className="text-sm font-semibold text-white">Classement</span>
             <ChevronRight className="size-4 text-zinc-600" />
           </Link>
-          <Link href="/pronos" className="flex items-center justify-between px-5 py-4 active:bg-zinc-800/30">
+          <Link href="/?tab=pronos" className="flex items-center justify-between px-5 py-4 active:bg-zinc-800/30 transition-colors">
             <span className="text-sm font-semibold text-white">Mes pronostics</span>
             <ChevronRight className="size-4 text-zinc-600" />
           </Link>
         </section>
+
+        {/* (Paramètres ont été déplacés sur /parametres) */}
 
         {/* ─── LAST PREDICTIONS ─── */}
         {predictions.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-3 px-1">
               <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Historique récent</p>
-              <Link href="/pronos" className="text-[10px] font-bold uppercase tracking-widest text-orange-500 flex items-center gap-1">
+              <Link href="/?tab=pronos" className="text-[10px] font-bold uppercase tracking-widest text-orange-500 flex items-center gap-1">
                 Tout voir <ChevronRight className="size-3" />
               </Link>
             </div>
@@ -362,26 +380,15 @@ export default function ProfilPage() {
         )}
 
         {predictions.length === 0 && (
-          <section className="rounded-2xl bg-[#161B26] p-8 text-center">
+          <section className="rounded-2xl bg-[#161B26]/80 backdrop-blur-md border border-white/5 p-8 text-center">
             <p className="text-sm text-zinc-500">Aucun pronostic pour le moment.</p>
-            <Link href="/pronos" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-orange-500">
+            <Link href="/?tab=pronos" className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-orange-500">
               Pronostiquer <ArrowRight className="size-3.5" />
             </Link>
           </section>
         )}
 
-        {/* ─── SIGN OUT ─── */}
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="flex items-center justify-center gap-2 py-4 text-sm text-red-400 active:text-red-300"
-        >
-          <LogOut className="size-4" />
-          Se déconnecter
-        </button>
       </main>
-
-      <BottomNav />
     </div>
   )
 }

@@ -80,14 +80,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           const userLeagues = members.map((m: any) => m.leagues).filter(Boolean)
           setLeagues(userLeagues)
 
-          // If no league is selected in state (from localStorage) or the selected one is invalid, 
-          // default to the first one
-          setLeagueIdState((prev) => {
-            if (prev && userLeagues.some((l: any) => l.id === prev)) return prev
-            const newId = userLeagues[0].id
-            if (typeof window !== 'undefined') localStorage.setItem('eurostep_league_id', newId)
-            return newId
-          })
+          if (userLeagues.length > 0) {
+            // If no league is selected in state (from localStorage) or the selected one is invalid, 
+            // default to the first one
+            setLeagueIdState((prev) => {
+              if (prev && userLeagues.some((l: any) => l.id === prev)) return prev
+              const newId = userLeagues[0].id
+              if (typeof window !== 'undefined') localStorage.setItem('eurostep_league_id', newId)
+              return newId
+            })
+          } else {
+            setLeagueId(null)
+          }
         } else {
           setLeagues([])
           setLeagueId(null)
@@ -119,12 +123,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           if (members && members.length > 0) {
             const userLeagues = members.map((m: any) => m.leagues).filter(Boolean)
             setLeagues(userLeagues)
-            setLeagueIdState((prev) => {
-              if (prev && userLeagues.some((l: any) => l.id === prev)) return prev
-              const newId = userLeagues[0].id
-              if (typeof window !== 'undefined') localStorage.setItem('eurostep_league_id', newId)
-              return newId
-            })
+            if (userLeagues.length > 0) {
+              setLeagueIdState((prev) => {
+                if (prev && userLeagues.some((l: any) => l.id === prev)) return prev
+                const newId = userLeagues[0].id
+                if (typeof window !== 'undefined') localStorage.setItem('eurostep_league_id', newId)
+                return newId
+              })
+            } else {
+              setLeagueId(null)
+            }
           } else {
             setLeagues([])
             setLeagueId(null)

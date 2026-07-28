@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import useSWR from 'swr'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BottomNav } from '@/components/bottom-nav'
@@ -28,36 +29,26 @@ const LEAGUE_FILTERS = ['Tous', 'WNBA', 'NBA', 'EuroLeague', 'Betclic Élite'] a
 
 export default function AccueilPage() {
   const { user, profile, leagueId, loading: authLoading } = useUser()
-  const [upcoming, setUpcoming] = useState<Match[]>([])
-  const [finished, setFinished] = useState<Match[]>([])
-  const [stats, setStats] = useState({ totalPoints: 0, exactScores: 0, totalPredictions: 0, successRate: 0 })
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
-  const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<string>('Tous')
 
-  useEffect(() => {
-    if (authLoading || !user) return
+  const { data: upcoming = [], mutate: mutateUpcoming, isLoading: upcomingLoading } = useSWR('upcoming-matches', getUpcomingMatches)
+  const { data: finished = [], isLoading: finishedLoading } = useSWR('finished-matches', () => getFinishedMatches(5))
+  
+  const { data: stats = { totalPoints: 0, exactScores: 0, totalPredictions: 0, successRate: 0 }, isLoading: statsLoading } = useSWR(
+    user ? `user-stats-${user.id}` : null,
+    () => user ? getUserStats(user.id) : null
+  )
 
-    async function load() {
-      const [up, fin, userStats] = await Promise.all([
-        getUpcomingMatches(),
-        getFinishedMatches(5),
-        getUserStats(user!.id),
-      ])
-      setUpcoming(up)
-      setFinished(fin)
-      setStats(userStats)
-
-      if (leagueId) {
-        const lb = await getLeaderboard(leagueId)
-        setLeaderboard(lb.slice(0, 3))
-      }
-
-      setLoading(false)
+  const { data: leaderboard = [], isLoading: leaderboardLoading } = useSWR(
+    leagueId ? `leaderboard-${leagueId}` : null,
+    async () => {
+      if (!leagueId) return []
+      const lb = await getLeaderboard(leagueId)
+      return lb.slice(0, 3)
     }
+  )
 
-    load()
-  }, [user, authLoading, leagueId])
+  const loading = authLoading || upcomingLoading || finishedLoading || statsLoading || leaderboardLoading
 
   // Live Scores Polling
   useEffect(() => {
@@ -69,7 +60,8 @@ export default function AccueilPage() {
         if (res.ok) {
           const data = await res.json()
           if (data.matches && data.matches.length > 0) {
-            setUpcoming(prevUpcoming => {
+            mutateUpcoming((prevUpcoming) => {
+              if (!prevUpcoming) return []
               const newUpcoming = [...prevUpcoming]
               data.matches.forEach((liveMatch: any) => {
                 const idx = newUpcoming.findIndex(m => m.external_id === liveMatch.external_id || m.home_team === liveMatch.home_team)
@@ -83,7 +75,7 @@ export default function AccueilPage() {
                 }
               })
               return newUpcoming
-            })
+            }, { revalidate: false })
           }
         }
       } catch (e) {
@@ -95,7 +87,7 @@ export default function AccueilPage() {
     fetchLiveScores()
     const interval = setInterval(fetchLiveScores, 60000)
     return () => clearInterval(interval)
-  }, [user, authLoading])
+  }, [user, authLoading, mutateUpcoming])
   // Filter matches by league
   const filteredUpcoming = useMemo(() => {
     if (activeFilter === 'Tous') return upcoming
@@ -201,7 +193,7 @@ export default function AccueilPage() {
             </span>
             <div className="h-3.5 w-px bg-white/10" />
             <span className="text-sm font-bold tabular-nums text-white">
-              <AnimatedCounter value={stats.totalPoints} className="text-sm font-bold tabular-nums" />
+              <AnimatedCounter value={stats?.totalPoints ?? 0} className="text-sm font-bold tabular-nums" />
             </span>
             <span className="text-[9px] text-zinc-500 font-semibold">pts</span>
           </div>

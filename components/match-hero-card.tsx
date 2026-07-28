@@ -37,10 +37,10 @@ function ScoreStepper({
 }) {
   return (
     <div className="flex flex-col items-center gap-2">
-      <output className="font-display text-4xl font-bold tabular-nums leading-none tracking-tight text-zinc-400">
+      <output className="font-display text-5xl font-black tabular-nums leading-none tracking-tighter text-white drop-shadow-md h-12 flex items-center">
         {value}
       </output>
-      <div className="flex items-center gap-1 bg-[#0B0E14] p-1.5 rounded-full border border-white/5 shadow-inner mt-1">
+      <div className="flex items-center gap-1 bg-[#0B0E14] p-1.5 rounded-full border border-white/5 shadow-inner mt-2">
         <button
           type="button"
           onClick={() => {
@@ -167,6 +167,7 @@ export function MatchHeroCard({
             src={home.starPlayer.imageUrl} 
             alt={home.starPlayer.name} 
             className="absolute bottom-0 left-2 h-40 object-contain z-10"
+            style={{ maskImage: 'linear-gradient(to top, transparent 0%, black 15%, black 100%)', WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 15%, black 100%)' }}
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
@@ -177,6 +178,7 @@ export function MatchHeroCard({
             src={away.starPlayer.imageUrl} 
             alt={away.starPlayer.name} 
             className="absolute bottom-0 right-2 h-40 object-contain z-10 scale-x-[-1]"
+            style={{ maskImage: 'linear-gradient(to top, transparent 0%, black 15%, black 100%)', WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 15%, black 100%)' }}
             onError={(e) => { e.currentTarget.style.display = 'none' }}
           />
         ) : (
@@ -317,19 +319,34 @@ export function MatchHeroCard({
         </div>
 
         {/* CTA Button */}
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.97 }}
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className={`w-full h-16 mt-2 rounded-2xl font-display text-xl font-black uppercase tracking-widest text-white transition-all shadow-[0_10px_20px_-10px_rgba(0,0,0,0.5)] border ${
-            submitted 
-              ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 border-emerald-400/50 shadow-[0_0_30px_rgba(52,211,153,0.3)]' 
-              : 'bg-gradient-to-r from-orange-600 to-orange-500 border-orange-500/50 hover:from-orange-500 hover:to-orange-400 shadow-[0_0_30px_rgba(249,115,22,0.2)]'
-          } disabled:opacity-50`}
-        >
-          {submitted ? '✅ Pronostic Validé' : isSubmitting ? 'Envoi...' : 'Valider mon prono'}
-        </motion.button>
+        <AnimatePresence mode="wait">
+          {!submitted ? (
+            <motion.button
+              key="submit-btn"
+              type="button"
+              initial={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="w-full h-16 mt-2 rounded-2xl font-display text-xl font-black uppercase tracking-widest text-white transition-all shadow-[0_10px_20px_-10px_rgba(249,115,22,0.4)] border border-orange-500/50 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Envoi...' : 'Valider mon prono'}
+            </motion.button>
+          ) : (
+            <motion.button
+              key="success-btn"
+              type="button"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+              disabled
+              className="w-full h-16 mt-2 rounded-2xl font-display text-xl font-black uppercase tracking-widest text-white transition-all shadow-[0_0_30px_rgba(52,211,153,0.4)] border border-emerald-400/50 bg-gradient-to-r from-emerald-500 to-emerald-400"
+            >
+              ✅ Pronostic Validé
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Sleek Premium Modal for League Predictions */}

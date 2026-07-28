@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import useSWR from 'swr'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BottomNav } from '@/components/bottom-nav'
@@ -28,41 +29,33 @@ interface Match {
 
 export default function PronosPage() {
   const { user, profile, loading: authLoading } = useUser()
-  const [matches, setMatches] = useState<Match[]>([])
-  const [predictions, setPredictions] = useState<Record<string, { home: number; away: number; isBoosted: boolean }>>({})
-  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [selectedLeague, setSelectedLeague] = useState<string>('all')
 
+  const { data: matches = [], mutate: mutateMatches, isLoading: matchesLoading } = useSWR('upcoming-matches', getUpcomingMatches)
+  
+  const { data: preds = [], mutate: mutatePreds, isLoading: predsLoading } = useSWR(
+    user ? `user-predictions-${user.id}` : null,
+    () => user ? getUserPredictions(user.id) : null
+  )
+
+  const predictions = useMemo(() => {
+    const predMap: Record<string, { home: number; away: number; isBoosted: boolean }> = {}
+    preds?.forEach((p: any) => {
+      predMap[p.match_id] = {
+        home: p.predicted_home_score,
+        away: p.predicted_away_score,
+        isBoosted: p.is_boosted,
+      }
+    })
+    return predMap
+  }, [preds])
+
+  const loading = authLoading || matchesLoading || predsLoading
+
   useEffect(() => {
-    if (authLoading || !user) {
-      if (!authLoading && !user) setLoading(false)
-      return
-    }
-
-    async function load() {
-      const [up, preds] = await Promise.all([
-        getUpcomingMatches(),
-        getUserPredictions(user!.id),
-      ])
-
-      setMatches(up)
-
-      const predMap: Record<string, { home: number; away: number; isBoosted: boolean }> = {}
-      preds.forEach((p: any) => {
-        predMap[p.match_id] = {
-          home: p.predicted_home_score,
-          away: p.predicted_away_score,
-          isBoosted: p.is_boosted,
-        }
-      })
-      setPredictions(predMap)
-
-      setLoading(false)
-    }
-
-    load()
+    if (authLoading || !user) return
 
     // Realtime subscription for matches
     const supabase = createClient()
@@ -72,7 +65,7 @@ export default function PronosPage() {
         if (typeof navigator !== 'undefined' && navigator.vibrate && payload.eventType === 'UPDATE') {
           navigator.vibrate([200, 100, 200])
         }
-        getUpcomingMatches().then(setMatches)
+        mutateMatches()
       })
       .subscribe()
 
@@ -83,19 +76,32 @@ export default function PronosPage() {
 
   async function handleSubmit(matchId: string, homeScore: number, awayScore: number, isBoosted: boolean = false) {
     if (!user) return
-    setSubmitting(matchId)
-
-    await submitPrediction(user.id, matchId, homeScore, awayScore, isBoosted)
-
-    // Play swoosh sound and haptic feedback
+    
+    // Play swoosh sound and haptic feedback instantly
     playSwoosh()
 
-    setPredictions((prev) => ({
-      ...prev,
-      [matchId]: { home: homeScore, away: awayScore, isBoosted },
-    }))
+    // Optimistic UI update
+    mutatePreds((prevPreds: any = []) => {
+      const newPreds = [...prevPreds]
+      const existingIdx = newPreds.findIndex(p => p.match_id === matchId)
+      const newPred = {
+        match_id: matchId,
+        predicted_home_score: homeScore,
+        predicted_away_score: awayScore,
+        is_boosted: isBoosted
+      }
+      if (existingIdx >= 0) {
+        newPreds[existingIdx] = { ...newPreds[existingIdx], ...newPred }
+      } else {
+        newPreds.push(newPred)
+      }
+      return newPreds
+    }, { revalidate: false })
 
-    setSubmitting(null)
+    // Background Submit without blocking UI
+    submitPrediction(user.id, matchId, homeScore, awayScore, isBoosted).catch(err => {
+      console.error("Erreur lors de l'enregistrement de la prédiction", err)
+    })
   }
 
   const leagues = Array.from(new Set(matches.map((m) => m.league_name)))
@@ -127,9 +133,10 @@ export default function PronosPage() {
             <p className="mt-2 text-xs font-semibold text-zinc-400">
               {matches.length} Match{matches.length !== 1 ? 's' : ''} à venir
             </p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-white">
-              Pronos<span className="text-orange-500">tics</span>
-            </h1>
+            <div className="mt-2 flex items-center">
+              <img src="/logo.png" alt="Eurostep Logo" className="h-10 object-contain drop-shadow-lg" />
+              <h1 className="sr-only">Pronostics</h1>
+            </div>
           </div>
           
           <Link href="/profil" className="shrink-0 rounded-full border-2 border-zinc-950 shadow-sm transition-transform hover:scale-105 active:scale-95">

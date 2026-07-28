@@ -62,29 +62,65 @@ export async function POST() {
        console.error('ODDS_API_KEY is not defined in environment variables')
     }
 
-    // 2. Resolve finished matches (mocking scores since odds api doesn't have them)
+    // 2. Resolve finished matches using real scores from The-Odds-API
     const { data: matchesToFinish } = await supabase
       .from('matches')
-      .select('id')
+      .select('id, external_id, home_team, away_team, league_name')
       .eq('status', 'upcoming')
       .lt('scheduled_at', new Date().toISOString())
 
-    if (matchesToFinish && matchesToFinish.length > 0) {
-      for (const m of matchesToFinish) {
-        const homeScore = Math.floor(Math.random() * (120 - 70 + 1)) + 70
-        const awayScore = Math.floor(Math.random() * (120 - 70 + 1)) + 70
+    if (matchesToFinish && matchesToFinish.length > 0 && ODDS_API_KEY) {
+      // Fetch real scores from the API (daysFrom=3 covers recent matches)
+      const scoresMap = new Map<string, { homeScore: number; awayScore: number }>()
+      
+      try {
+        const sportKeys = [...new Set(matchesToFinish.map(m => 
+          m.league_name === 'WNBA' ? 'basketball_wnba' : 'basketball_euroleague'
+        ))]
         
+        for (const sportKey of sportKeys) {
+          const scoresRes = await fetch(
+            `https://api.the-odds-api.com/v4/sports/${sportKey}/scores/?apiKey=${ODDS_API_KEY}&daysFrom=3`
+          )
+          if (scoresRes.ok) {
+            const scoresData = await scoresRes.json()
+            if (Array.isArray(scoresData)) {
+              for (const game of scoresData) {
+                if (game.completed && game.scores) {
+                  const homeScore = game.scores.find((s: any) => s.name === game.home_team)
+                  const awayScore = game.scores.find((s: any) => s.name === game.away_team)
+                  if (homeScore && awayScore) {
+                    scoresMap.set(`oddsapi_${game.id}`, {
+                      homeScore: parseInt(homeScore.score),
+                      awayScore: parseInt(awayScore.score)
+                    })
+                  }
+                }
+              }
+            }
+          }
+        }
+        console.log(`Fetched real scores for ${scoresMap.size} completed matches`)
+      } catch (e) {
+        console.error('Failed to fetch scores:', e)
+      }
+
+      // Only resolve matches that have real scores
+      for (const m of matchesToFinish) {
+        const realScore = scoresMap.get(m.external_id)
+        if (!realScore) continue // Skip — no real score yet
+
         await supabase
           .from('matches')
           .update({ 
             status: 'finished',
-            home_score: homeScore,
-            away_score: awayScore
+            home_score: realScore.homeScore,
+            away_score: realScore.awayScore
           })
           .eq('id', m.id)
 
         // Calculate points for all users who predicted this match
-        await calculateMatchPoints(m.id, homeScore, awayScore, supabase)
+        await calculateMatchPoints(m.id, realScore.homeScore, realScore.awayScore, supabase)
       }
     }
 

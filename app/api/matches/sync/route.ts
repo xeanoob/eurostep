@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { calculateMatchPoints } from '@/lib/predictions'
 
 export async function GET() {
@@ -8,7 +8,7 @@ export async function GET() {
 
 export async function POST() {
   try {
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     const ODDS_API_KEY = process.env.ODDS_API_KEY
     let selectedMatches: any[] = []
@@ -98,7 +98,7 @@ export async function POST() {
 
       if (error) {
         console.error('Supabase error:', error)
-        return NextResponse.json({ error: 'Failed to save matches', supabase_error: error.message, code: error.code, details: error.details, hint: error.hint }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to save matches', details: error.message }, { status: 500 })
       }
       insertedCount = data.length
     }
